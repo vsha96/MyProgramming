@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title> Float-sample </title>
+		  <link rel="stylesheet" type="text/css" href="style.css">
+	</head>
+	
+	<body>
+		<div class="menu">
+			<div class="item a grad">
+				<div class="icon1"></div>
+				Home
+			</div>
+			
+			<div class="item b grad">
+				<div class="icon2"></div>
+				Gallery
+			</div>
+			
+			
+			<div class="inset">test</div>
+			
+			<div class="inset">test1</div>
+			
+			
+			<div class="item c grad">
+				<div class="icon3"></div>
+				Logout
+			</div>
+		</div>
+	</body>
+
+
+</html>
+
+
+
+<style type="text/css">
+	body {
+		background-color: #5e5e5e;
+	}
+	
+	div.menu {
+		width: 198px;
+		margin: auto;
+		margin-top: 100px;
+		border: solid 1px #25272b;
+		border-radius: 3px;
+		background: #3a3c41;
+	}
+	
+	div.item {
+		height: 30px;
+		padding-top: 11px;
+		padding-left: 18px;
+		border-bottom: solid 1px #25272b;
+		color: white;
+		text-shadow: 1px 1px 0px black;
+	}
+	
+	div.a {
+		border-radius: 3px 3px 0px 0px;
+	}
+	
+	div.c {
+		border-radius: 0px 0px 3px 3px;
+		border-bottom: solid 0px;
+	}
+	
+	div.icon1 {
+		float: left;
+		width: 21px;
+		height: 21px;
+		margin-right: 12px;
+		background: url('i/house.png') no-repeat;
+	}
+	
+	div.icon2 {
+		float: left;
+		width: 21px;
+		height: 21px;
+		margin-right: 12px;
+		background: url('i/gal.png') no-repeat;
+	}
+	
+	div.icon3 {
+		float: left;
+		width: 21px;
+		height: 21px;
+		margin-right: 12px;
+		background: url('i/log.png') no-repeat;
+	}
+	
+	div.inset:hover {
+		height: 30px;
+		padding-top: 11px;
+		padding-left: 18px;
+		border-bottom: solid 1px #25272b;
+		color: white;
+		text-shadow: 1px 1px 0px black;
+	}
+	
+	
+	
+	
+	.inset {
+		background: #aaaaaa;
+		background: -moz-linear-gradient(top, #aaaaaa 56%, #494949 100%);
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(56%,#aaaaaa), color-stop(100%,#494949));
+		background: -webkit-linear-gradient(top, #aaaaaa 56%,#494949 100%);
+		background: -o-linear-gradient(top, #aaaaaa 56%,#494949 100%);
+		background: -ms-linear-gradient(top, #aaaaaa 56%,#494949 100%);
+		background: linear-gradient(to bottom, #aaaaaa 56%,#494949 100%);
+	}
+	
+	
+	.grad {
+		background: #585b63;
+		background: -moz-linear-gradient(top, #585b63 0%, #4c4e58 3%, #3f424a 100%);
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#585b63), color-stop(3%,#4c4e58), color-stop(100%,#3f424a));
+		background: -webkit-linear-gradient(top, #585b63 0%,#4c4e58 3%,#3f424a 100%);
+		background: -o-linear-gradient(top, #585b63 0%,#4c4e58 3%,#3f424a 100%);
+		background: -ms-linear-gradient(top, #585b63 0%,#4c4e58 3%,#3f424a 100%);
+		background: linear-gradient(to bottom, #585b63 0%,#4c4e58 3%,#3f424a 100%);
+	}
+</style>

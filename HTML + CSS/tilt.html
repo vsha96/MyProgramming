@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>tool</title>
+	</head>
+	
+	
+	<body>
+	
+			<div class="set set-active">
+				<div class="set-icon set-icon-active"></div>
+			</div>
+			
+	</body>
+
+
+</html>
+
+<style type="text/css">
+
+	body {
+		margin: 0px;
+		background: url('i/back.png') repeat 0 0 transparent;
+	}
+
+	div.set {
+		width: 33px;
+		height: 33px;
+		margin: auto;
+		margin-top: 450px;
+		border: solid 1px black;
+		border-radius: 5px;
+	}
+	
+	div.set-icon {
+		width: 34px;
+		height: 34px;
+		margin: 2px 0 0 0.5px;
+		background: url('i/but.png') no-repeat 0 0 transparent;
+	}
+	
+	div.set-active:hover {
+		border-radius: 5px;
+		background: #191919;
+		background: -moz-linear-gradient(top, #191919 0%, #3f3f3f 100%);
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#191919), color-stop(100%,#3f3f3f));
+		background: -webkit-linear-gradient(top, #191919 0%,#3f3f3f 100%);
+		background: -o-linear-gradient(top, #191919 0%,#3f3f3f 100%);
+		background: -ms-linear-gradient(top, #191919 0%,#3f3f3f 100%);
+		background: linear-gradient(to bottom, #191919 0%,#3f3f3f 100%);
+	}
+	
+	div.set-active:hover div.set-icon-active {
+		background: url('i/but-active.png')
+	}
+	
+	
+	.set {
+		background: #888888;
+		background: -moz-linear-gradient(top, #888888 0%, #464646 100%);
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#888888), color-stop(100%,#464646));
+		background: -webkit-linear-gradient(top, #888888 0%,#464646 100%);
+		background: -o-linear-gradient(top, #888888 0%,#464646 100%);
+		background: -ms-linear-gradient(top, #888888 0%,#464646 100%);
+		background: linear-gradient(to bottom, #888888 0%,#464646 100%);
+	}
+
+
+</style>

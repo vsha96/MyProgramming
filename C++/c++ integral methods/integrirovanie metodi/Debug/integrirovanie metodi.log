@@ -1,0 +1,27 @@
+﻿Сборка начата 24.04.2017 10:43:52.
+     1>Проект "F:\integrirovanie metodi\integrirovanie metodi\integrirovanie metodi.vcxproj" в узле 2 (целевые объекты build).
+     1>InitializeBuildStatus:
+         Создание "Debug\integrirovanie metodi.unsuccessfulbuild", так как было задано "AlwaysCreate".
+       ClCompile:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt "centr mass.cpp"
+         centr mass.cpp
+     1>f:\integrirovanie metodi\integrirovanie metodi\centr mass.cpp(23): warning C4101: y: неиспользованная локальная переменная
+     1>f:\integrirovanie metodi\integrirovanie metodi\centr mass.cpp(25): warning C4101: i: неиспользованная локальная переменная
+     1>f:\integrirovanie metodi\integrirovanie metodi\centr mass.cpp(23): warning C4101: e: неиспользованная локальная переменная
+     1>f:\integrirovanie metodi\integrirovanie metodi\centr mass.cpp(23): warning C4101: xi: неиспользованная локальная переменная
+       Link:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"F:\integrirovanie metodi\Debug\integrirovanie metodi.exe" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\integrirovanie metodi.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"F:\integrirovanie metodi\Debug\integrirovanie metodi.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:\integrirovanie metodi\Debug\integrirovanie metodi.lib" /MACHINE:X86 "Debug\centr mass.obj"
+         "Debug\integrirovanie metodi.obj"
+         "Debug\metod simpsona dop.obj"
+         LINK : не найден или не выполнена сборка F:\integrirovanie metodi\Debug\integrirovanie metodi.exe при последней инкрементной компоновке; выполняется полная компоновка
+         integrirovanie metodi.vcxproj -> F:\integrirovanie metodi\Debug\integrirovanie metodi.exe
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"F:\integrirovanie metodi\Debug\integrirovanie metodi.exe;#1" /manifest "Debug\integrirovanie metodi.exe.intermediate.manifest"
+       FinalizeBuildStatus:
+         Файл "Debug\integrirovanie metodi.unsuccessfulbuild" удаляется.
+         Обращение к "Debug\integrirovanie metodi.lastbuildstate".
+     1>Построение проекта "F:\integrirovanie metodi\integrirovanie metodi\integrirovanie metodi.vcxproj" завершено (целевые объекты build).
+
+Построение успешно завершено.
+
+Затраченное время: 00:00:04.70
