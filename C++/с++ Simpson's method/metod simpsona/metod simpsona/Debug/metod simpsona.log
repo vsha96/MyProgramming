@@ -1,0 +1,17 @@
+﻿Сборка начата 20.03.2017 10:25:00.
+     1>Проект "C:\Users\user.CLASS.000\Desktop\metod simpsona\metod simpsona\metod simpsona.vcxproj" в узле 2 (целевые объекты build).
+     1>InitializeBuildStatus:
+         Создание "Debug\metod simpsona.unsuccessfulbuild", так как было задано "AlwaysCreate".
+       ClCompile:
+         Для всех выходных данных обновления не требуется.
+       Link:
+         Для всех выходных данных обновления не требуется.
+         metod simpsona.vcxproj -> C:\Users\user.CLASS.000\Desktop\metod simpsona\Debug\metod simpsona.exe
+       FinalizeBuildStatus:
+         Файл "Debug\metod simpsona.unsuccessfulbuild" удаляется.
+         Обращение к "Debug\metod simpsona.lastbuildstate".
+     1>Построение проекта "C:\Users\user.CLASS.000\Desktop\metod simpsona\metod simpsona\metod simpsona.vcxproj" завершено (целевые объекты build).
+
+Построение успешно завершено.
+
+Затраченное время: 00:00:00.23

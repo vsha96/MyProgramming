@@ -1,0 +1,12 @@
+﻿Сборка начата 20.12.2016 9:51:31.
+     1>Проект "C:\Users\user.CLASS.000\Desktop\del2\del2.vcxproj" в узле 2 (целевые объекты build).
+     1>InitializeBuildStatus:
+         Создание "Release\del2.unsuccessfulbuild", так как было задано "AlwaysCreate".
+       FinalizeBuildStatus:
+         Файл "Release\del2.unsuccessfulbuild" удаляется.
+         Обращение к "Release\del2.lastbuildstate".
+     1>Построение проекта "C:\Users\user.CLASS.000\Desktop\del2\del2.vcxproj" завершено (целевые объекты build).
+
+Построение успешно завершено.
+
+Затраченное время: 00:00:00.16

@@ -1,0 +1,21 @@
+﻿Build started 25.12.2016 19:02:20.
+     1>Project "D:\Dropbox\программирование\C++\kasato4ka\kasato4ka.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\kasato4ka.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         D:\Visual Studio 2010 Express\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt kas.cpp
+         kas.cpp
+       Link:
+         D:\Visual Studio 2010 Express\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Dropbox\программирование\C++\kasato4ka\Debug\kasato4ka.exe" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\kasato4ka.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"D:\Dropbox\программирование\C++\kasato4ka\Debug\kasato4ka.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Dropbox\программирование\C++\kasato4ka\Debug\kasato4ka.lib" /MACHINE:X86 Debug\kas.obj
+         LINK : D:\Dropbox\программирование\C++\kasato4ka\Debug\kasato4ka.exe not found or not built by the last incremental link; performing full link
+         kasato4ka.vcxproj -> D:\Dropbox\программирование\C++\kasato4ka\Debug\kasato4ka.exe
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"D:\Dropbox\программирование\C++\kasato4ka\Debug\kasato4ka.exe;#1" /manifest Debug\kasato4ka.exe.intermediate.manifest
+       FinalizeBuildStatus:
+         Deleting file "Debug\kasato4ka.unsuccessfulbuild".
+         Touching "Debug\kasato4ka.lastbuildstate".
+     1>Done Building Project "D:\Dropbox\программирование\C++\kasato4ka\kasato4ka.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.48

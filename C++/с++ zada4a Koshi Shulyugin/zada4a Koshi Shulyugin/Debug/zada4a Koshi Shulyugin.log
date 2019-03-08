@@ -1,0 +1,25 @@
+﻿Построение начато 22.05.2017 8:55:51.
+     1>Проект "E:\zada4a Koshi Shulyugin\zada4a Koshi Shulyugin\zada4a Koshi Shulyugin.vcxproj" в узле 2 (целевые объекты build).
+     1>InitializeBuildStatus:
+         Создание "Debug\zada4a Koshi Shulyugin.unsuccessfulbuild", так как было задано "AlwaysCreate".
+       GenerateTargetFrameworkMonikerAttribute:
+       Целевой объект "GenerateTargetFrameworkMonikerAttribute" пропускается, так как все выходные файлы актуальны по отношению к входным.
+       ClCompile:
+         Для всех выходных данных обновления не требуется.
+         Для всех выходных данных обновления не требуется.
+         Для всех выходных данных обновления не требуется.
+       CoreResGen:
+         Для всех выходных данных обновления не требуется.
+       ResourceCompile:
+         Для всех выходных данных обновления не требуется.
+       Link:
+         Для всех выходных данных обновления не требуется.
+         zada4a Koshi Shulyugin.vcxproj -> E:\zada4a Koshi Shulyugin\Debug\zada4a Koshi Shulyugin.exe
+       FinalizeBuildStatus:
+         Файл "Debug\zada4a Koshi Shulyugin.unsuccessfulbuild" удаляется.
+         Обращение к "Debug\zada4a Koshi Shulyugin.lastbuildstate".
+     1>Построение проекта "E:\zada4a Koshi Shulyugin\zada4a Koshi Shulyugin\zada4a Koshi Shulyugin.vcxproj" завершено (целевые объекты build).
+
+Построение успешно завершено.
+
+Затраченное время: 00:00:00.56

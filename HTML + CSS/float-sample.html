@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title> Float-sample </title>
+	</head>
+
+	<body>
+		<div class="wrap">
+		
+		
+		
+		
+		
+			<div class="square horizontal"> 
+				square 1
+			</div>
+	
+			<div class="square horizontal"> 
+				square 2
+			</div>
+		
+			<div class="square horizontal"> 
+				square 3
+			</div>
+			
+			<div class="aside"> 
+				aside
+			</div>
+			
+			<div class="square vertical"> 4 </div>
+			<div class="square vertical"> 5 </div>
+			<div class="square vertical"> 6 </div>
+			
+			
+			
+			
+			<div class="clear"> clear </div>
+			
+		
+		
+		
+		
+		</div>
+	</body>
+	
+</html>
+
+
+<style type="text/css">
+
+	/* блок, в котором лежат все другие */ 
+	div.wrap {		
+		width: 1000px;
+		margin: auto;
+		background: #99ffff;
+	}
+	
+	/* маленькие квадраты горизонтальные и вертикальные */
+	div.square {
+		width: 80px;
+		height: 80px;
+		
+		margin-left: 30px;
+	}
+	
+	div.horizontal {
+		float: left;
+		margin-top: 100px;
+		background: #370fff;
+	}
+	
+	div.vertical {
+		clear: left;
+		float: left;
+		width: 300px;
+		margin-top: 50px;
+		background: #ff1212;
+	}
+	
+	
+	/* сбоку блок */
+	div.aside {
+		float: right;
+	
+		width: 270px;
+		height: 600px;
+		
+		margin-top: 100px;
+		margin-right: 30px;
+		
+		background: #ffca1a;
+	}
+	
+	/* очистить */
+	div.clear {
+		clear: both;
+	}
+	
+	
+
+</style>

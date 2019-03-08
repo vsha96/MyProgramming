@@ -1,0 +1,193 @@
+/* 
+    Created on : 17.05.2015, 20:04:02
+    Author     : vsha96
+*/
+body {
+    font-family: arial;
+    background: #f9cb87;
+}
+
+#map-img {
+    position: absolute;
+    display: block;
+    right: 8px;
+    margin: 0;
+    float: right;
+}
+
+.container {
+    cursor: pointer;
+    float: left;
+    margin: 0;
+    padding: 0;
+    width: 200px;
+}
+
+.container .col .about {
+    display: none;
+    position: absolute;
+    top: 14px;
+    width: 350px;
+    left: 165px;
+    background: #f7f0da;
+}
+
+.container .col:hover .about {
+    display: block;
+}
+
+.col {
+    height: 22px;
+    width: 150px;
+    padding: 3px 0 0px 0;
+    margin: 0;
+    border: 1px solid black;
+    border-bottom: 0px;
+    text-align:  center;
+    background: #f7f0da;
+}
+
+#col5 {
+    border-bottom: 1px solid black;
+}
+
+.col:hover {
+    box-shadow: inset 0 0 3px 0 black; 
+    background: #afcad8;
+}
+
+li {
+    list-style-type: none;
+}
+
+h1 {
+    margin: 4%;
+    text-align: center;
+}
+
+h6 {
+    text-align: center;
+}
+
+.but {
+    width: 256px;
+    height: 256px;
+    margin: 0 40.5% 0 40.5%;
+}
+
+.back { 
+    width: 250px;
+    height: 40px;
+    position: absolute;
+    left: 8px;
+    bottom: 13px;
+    color: black;
+    box-shadow: 2px 2px 4px gray;
+    text-align: center;
+    line-height: 40px;
+    border-radius: 30px;
+    background: #f7f0da;
+}
+
+.back:hover {
+    box-shadow: inset 2px 2px 4px gray;
+}
+
+.colonel {
+    padding: 0 0 48% 0;
+    margin: 1% 0 0 0;
+}
+
+.about {
+    width: 400px;
+    height: 600px;
+    margin-right: -10%;
+    border: 1px solid black;
+}
+
+.msu {
+    /*zoom: 70%;*/
+    height: 286px;
+}
+
+.fsb {
+    /*zoom: 27.9%;*/
+    height: 286px;
+}
+
+.rgu {
+    /*zoom: 55.7%;*/
+    height: 286px;
+}
+
+.mgimo {
+    /*zoom: 82.2%;*/
+    padding-bottom: 19px;
+    height: 267px;
+}
+
+.ranepa {
+   /*zoom: 29.9%;*/
+    height: 286px;
+}
+
+.vid {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    top: 100px;
+    right: 100px;
+    background-color: rgba(15,15,255,.2);
+    box-shadow: 2px 2px 4px #666;
+    border-radius: 50px;
+}
+
+#vid1 {
+    display: none;
+    top: 70px;
+    right: 302px;
+}
+
+#vid2 {
+    display: none;
+    top: 230px;
+    right: 670px;
+}
+
+#vid3 {
+    display: none;
+    top: 180px;
+    right: 155px;
+}
+
+#vid4 {
+    display: none;
+    top: 360px;
+    right: 553px;
+}
+
+#vid5 {
+    display: none;
+    top: 420px;
+    right: 645px;
+}
+
+.container .col:hover #vid1 {
+    display: block;
+}
+
+.container .col:hover #vid2 {
+    display: block;
+}
+
+.container .col:hover #vid3 {
+    display: block;
+}
+
+.container .col:hover #vid4 {
+    display: block;
+}
+
+.container .col:hover #vid5 {
+    display: block;
+}

@@ -1,0 +1,39 @@
+﻿Build started 22.05.2017 6:50:55.
+     1>Project "G:\dif c polinomom lagranja\dif c polinomom lagranja\dif c polinomom lagranja.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\dif c polinomom lagranja.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       ClCompile:
+         D:\Visual Studio 2010 Express\VC\bin\CL.exe /c /AI"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0" /Zi /clr:pure /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _UNICODE /D UNICODE /EHa /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"Debug\dif c polinomom lagranja.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /TP /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Core.dll" /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Data.dll" /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.dll" /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Drawing.dll" /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Windows.Forms.dll" /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Xml.dll" /analyze- /errorReport:prompt stdafx.cpp /clr:nostdlib 
+         stdafx.cpp
+         D:\Visual Studio 2010 Express\VC\bin\CL.exe /c /AI"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0" /Zi /clr:pure /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _UNICODE /D UNICODE /EHa /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\dif c polinomom lagranja.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /TP /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Core.dll" /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Data.dll" /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.dll" /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Drawing.dll" /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Windows.Forms.dll" /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Xml.dll" /analyze- /errorReport:prompt AssemblyInfo.cpp "dif c polinomom lagranja.cpp" /clr:nostdlib 
+         AssemblyInfo.cpp
+         dif c polinomom lagranja.cpp
+     1>g:\dif c polinomom lagranja\dif c polinomom lagranja\Form1.h(136): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>g:\dif c polinomom lagranja\dif c polinomom lagranja\Form1.h(136): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>g:\dif c polinomom lagranja\dif c polinomom lagranja\Form1.h(158): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>g:\dif c polinomom lagranja\dif c polinomom lagranja\Form1.h(158): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+         Generating Code...
+         All outputs are up-to-date.
+       CoreResGen:
+         No resources are out of date with respect to their source files. Skipping resource generation.
+       ResourceCompile:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D _UNICODE /D UNICODE /l"0x0409" /nologo /fo"Debug\app.res" app.rc 
+       Link:
+         D:\Visual Studio 2010 Express\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"G:\dif c polinomom lagranja\Debug\dif c polinomom lagranja.exe" /INCREMENTAL /NOLOGO /ASSEMBLYRESOURCE:Debug\difcpolinomomlagranja.Form1.resources /MANIFEST /ManifestFile:"Debug\dif c polinomom lagranja.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"G:\dif c polinomom lagranja\Debug\dif c polinomom lagranja.pdb" /ASSEMBLYDEBUG /SUBSYSTEM:WINDOWS /TLBID:1 /ENTRY:"main" /DYNAMICBASE /FIXED:NO /NXCOMPAT /MACHINE:X86 Debug\app.res
+         Debug\AssemblyInfo.obj
+         "Debug\dif c polinomom lagranja.obj"
+         Debug\stdafx.obj
+         "Debug\.NETFramework,Version=v4.0.AssemblyAttributes.obj"
+         dif c polinomom lagranja.vcxproj -> G:\dif c polinomom lagranja\Debug\dif c polinomom lagranja.exe
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"G:\dif c polinomom lagranja\Debug\dif c polinomom lagranja.exe;#1" /manifest "Debug\dif c polinomom lagranja.exe.intermediate.manifest"
+       FinalizeBuildStatus:
+         Deleting file "Debug\dif c polinomom lagranja.unsuccessfulbuild".
+         Touching "Debug\dif c polinomom lagranja.lastbuildstate".
+     1>Done Building Project "G:\dif c polinomom lagranja\dif c polinomom lagranja\dif c polinomom lagranja.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:20.18
