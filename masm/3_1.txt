@@ -1,0 +1,4 @@
+а) ah=3 al=220 CF=0 ZF=0
+б) ah=4 al=64 CF=0 ZF=0
+в) ah=0 al=0 CF=1 ZF=1
+г) ah=19 al=250 CF=0 ZF=0
