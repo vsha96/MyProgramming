@@ -49,20 +49,30 @@ void StringPrint(const struct string *str)
 	temp = str;
 	while(temp!=NULL)
 	{
-		while((c=(temp->x[i]))!=EOF) 
+		/*while((c=(temp->x[i]))!=EOF) 
 		{
 			putchar(c);
-			if (i==chunk_size)
+			if (i==chunk_size-1)
 			{
 				i=0;
-				temp=temp->next;
-				c=EOF;
+				//temp=temp->next;
+				goto nextchunk;
 			} else {
 				i++;
 			}
 		}
-		
+		nextchunk:;
 		temp=temp->next;
+		*/
+		//===new version===
+		while((c=(temp->x[i]))!=EOF && (i<chunk_size)) 
+		{
+			putchar(c);
+			i++;
+		}
+		temp=temp->next;
+		i=0;
+		//===/new version===
 	}
 	
 }
@@ -76,15 +86,60 @@ void StringFree(struct string *str) //we need test for this thing
 	}
 }
 
+int StringSize(const struct string *str)
+{
+	int n=0, i=0,c;
+	const struct string *temp;
+	temp = str;
+	while(temp!=NULL)
+	{
+		while((c=(temp->x[i]))!=EOF && (i<chunk_size)) 
+		{
+			n++; i++;
+		}
+		temp=temp->next;
+		i=0;
+	}
+	return n;
+}
+
 /*we need some procedures to separate string into words*/
+/*
+struct string *StringMakeNewFrom(const struct string *str,int s1,int s2)
+{
+	const struct string *temp;
+	struct string *newstr;
+	int i=0,j=0;
+	//move to our 1st separator
+	for (j=0;j<=s1;j++)
+	{
+		return 0;
+	}
+	
+	
+	return newstr;
+}
+*/
+
+void StringSeparate(const struct string *str)
+{
+	
+	
+}
 
 int main()
 {
 	struct string *str;
 	printf("Input string:\n");
 	str = StringFill();
+	
 	printf("Your string:\n");
 	StringPrint(str);
+	//printf("\n");
+	
+	printf("Size of your string:\n");
+	printf("%i\n",StringSize(str));
+	
 	
 	return 0;
 }
