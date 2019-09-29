@@ -13,8 +13,18 @@ public class Test {
         }
         */
         //int z;
+        /*
         String ar = "hello";
         System.out.println(ar.charAt(1));
+        */
+        int l=0;
 
+        int x;
+        for (x = 0;  x <= 7; x += 7) {
+            System.out.println("Here");
+        }
+        System.out.println(x);
+
+        System.out.println(l);
     }
 }
