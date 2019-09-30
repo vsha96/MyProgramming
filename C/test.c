@@ -124,7 +124,6 @@ struct string *StringMakeNewFrom(const struct string *str,int s1,int s2)
 void StringSeparate(const struct string *str)
 {
 	
-	
 }
 
 int main()
@@ -137,9 +136,14 @@ int main()
 	StringPrint(str);
 	//printf("\n");
 	
+	/*
 	printf("Size of your string:\n");
 	printf("%i\n",StringSize(str));
-	
+	*/
+	StringFree(str);
+	str = NULL;
+	printf("Your string after delete:\n");
+	StringPrint(str);
 	
 	return 0;
 }
