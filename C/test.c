@@ -98,7 +98,6 @@ int StringSize(const struct string *str)
 }
 
 /*we need some procedures to separate string into words*/
-
 struct string *StringMakeNewFrom(struct string *str,int s1,int s2)
 {
 	struct string *temp, *newstr, *newtemp;
@@ -239,25 +238,22 @@ struct CommandWord *StringSeparate(struct string *str)
 			linetemp->next = NULL;
 			flag = 0;
 		} else {
-// if spaces
-		if ((temp->x[m]!=' ') && ((flagspace==0) && (flag==0)))
-		{
-			p = i;
-			flagspace = 1;
-		}
-if (((temp->x[m]==' ') || (temp->x[m])=='\n') && ((flagspace==1) && (flag==0)))
-		{
-			q = i;
-			linetemp->word = StringMakeNewFrom(str,p,q);
-			linetemp->next = malloc(sizeof(*line));
-			linetemp = linetemp->next;
-			linetemp->next = NULL;
-			flagspace = 0;
-		}
+		// if spaces
+			if ((temp->x[m]!=' ') && ((flagspace==0) && (flag==0)))
+			{
+				p = i;
+				flagspace = 1;
+			} else if (((temp->x[m]==' ') || (temp->x[m])=='\n') && ((flagspace==1) && (flag==0)))
+			{
+				q = i;
+				linetemp->word = StringMakeNewFrom(str,p,q);
+				linetemp->next = malloc(sizeof(*line));
+				linetemp = linetemp->next;
+				linetemp->next = NULL;
+				flagspace = 0;
 			}
-		
+		}
 	}
-	
 	return line;
 	
 }
