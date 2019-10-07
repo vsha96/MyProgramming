@@ -1,20 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
-struct CommandWord {
-	struct string *word;
-	struct CommandWord *next;
+struct CommandLine {
+	struct String *word;
+	struct CommandLine *next;
 };
 enum {
 	chunk_size = 8
 };
-struct string {
+struct String {
 	int x[chunk_size]; //elements of chunk
-	struct string *next;
+	struct String *next;
 };
 
-struct string *StringFill()
+struct String *StringFill()
 {
-	struct string *str,*temp; //we use it when we create another buffer
+	struct String *str,*temp; //we use it when we create another buffer
 	int i=0;
 	int c; //our char with EOF
 	str = malloc(sizeof(*str));
@@ -40,9 +40,9 @@ struct string *StringFill()
 	return str;
 }
 
-void StringPrint(const struct string *str)
+void StringPrint(const struct String *str)
 {
-	const struct string *temp; //what it does?
+	const struct String *temp; //what it does?
 	int i=0;
 	int c; //our char with EOF
 	temp = str;
@@ -58,20 +58,7 @@ void StringPrint(const struct string *str)
 	}
 }
 
-void CommandLinePrint(const struct CommandWord *line)
-{
-	const struct CommandWord *linetemp;
-	linetemp = line;
-	while (linetemp!=NULL)
-	{
-		StringPrint(linetemp->word);
-		printf("\n");
-		linetemp=linetemp->next;
-	}
-	
-}
-
-void StringFree(struct string *str) //we need test for this thing
+void StringFree(struct String *str) //we need test for this thing
 {
 	if (str != NULL)
 	{
@@ -80,10 +67,10 @@ void StringFree(struct string *str) //we need test for this thing
 	}
 }
 
-int StringSize(const struct string *str)
+int StringSize(const struct String *str)
 {
 	int n=0, i=0,c;
-	const struct string *temp;
+	const struct String *temp;
 	temp = str;
 	while(temp!=NULL)
 	{
@@ -98,9 +85,9 @@ int StringSize(const struct string *str)
 }
 
 /*we need some procedures to separate string into words*/
-struct string *StringMakeNewFrom(struct string *str,int s1,int s2)
+struct String *StringMakeNewFrom(struct String *str,int s1,int s2)
 {
-	struct string *temp, *newstr, *newtemp;
+	struct String *temp, *newstr, *newtemp;
 	int i,j,l;
 	temp = str;
 	s1 -= 1; s2 -= 1; //shift
@@ -114,162 +101,146 @@ struct string *StringMakeNewFrom(struct string *str,int s1,int s2)
 	s2 = s1 + s2; //s2 points in new base
 	newstr = malloc(sizeof(*newstr));
 	newtemp = newstr;
-//===new idea===
-		for (j=s1;j<=s2;j++)
-		{
-			l = j-s1; //index in chunk of newstr
-	//printf("\tj = %i\n",j);
-			if ( (j != 0) && ((j)%chunk_size) == 0)
-			{
-				temp=temp->next;
-			}
-			if ( (l != 0) && ((l)%chunk_size) == 0)
-			{
-				newtemp->next=malloc(sizeof(*newstr));
-				newtemp=newtemp->next;
-			}
-			newtemp->x[(l%chunk_size)]=temp->x[(j%chunk_size)];
-		}
+	for (j=s1;j<=s2;j++)
+	{
 		l = j-s1; //index in chunk of newstr
-		//ending
-		if ( ((l)%chunk_size) != 0 )
-		{
-			newtemp->x[(l%chunk_size)]=EOF;
-		}
-		newtemp->next=NULL;
-		
-//===old idea===
-/*
-	//copy every chunk we needed //!BASE (s2-1) -> (s1+s2-1) etc
-	for (i=0;i<=((s2-1)/chunk_size);i++)
-	{
-		//if first chunk
-		if (i==0)
-		{
-			if ((s2-1)/chunk_size!=0) //if 2nd separator not in our chunk
-			{
-				for (j=s1-1;j<chunk_size;j++)
-				{
-					newtemp->x[j-s1+1]=temp->x[j];
-				}
-			} else { // 2nd separator in our chunk, we need ending
-				for (j=s1-1;j<s2;j++)
-				{
-					newtemp->x[j-s1+1]=temp->x[j];
-				}
-				//ending
-				if (j-s1+1 != chunk_size)
-				{
-					newtemp->x[j-s1+1]=EOF;
-				}
-				newtemp->next=NULL;
-			}
-		}
-		
-		//if last chunk
-		// we need to pay attention for our new base!
-		//Ive fucked up
-		if (i==((s2-1)/chunk_size))
-		{
-			if ((s2-1)/chunk_size!=0) //if 2nd separator not in our chunk
-			{
-				for (j=s1-1;j<chunk_size;j++)
-				{
-					newtemp->x[j-s1+1]=temp->x[j];
-				}
-			} else { // 2nd separator in our chunk, we need ending
-				for (j=s1-1;j<s2;j++)
-				{
-					newtemp->x[j-s1+1]=temp->x[j];
-				}
-				//ending
-				if (j-s1+1 != chunk_size)
-				{
-					newtemp->x[j-s1+1]=EOF;
-				}
-				newtemp->next=NULL;
-			}
-		}
-		//else
-		else
-		{
-			newtemp->next=malloc(sizeof(*newstr));
-			for (j=0;j<chunk_size;j++)
-			{
-				newtemp->x[j]=temp->x[j];
-			}
-		}
-	}
-*/
-	return newstr;
-}
-
-
-struct CommandWord *StringSeparate(struct string *str)
-{
-	struct CommandWord *line,*linetemp;
-	struct string *temp;
-	temp = str;
-	line = malloc(sizeof(*line));
-	linetemp = line;
-	linetemp->next=NULL;
-	int i,j,m;
-	int p,q;
-	int flagspace=0,flag=0;
-	//we're moving through our string, if ' ' or '"' => separate
-	for (i=1;i<=StringSize(str);i++) //!!! <= : we need last symbol
-	{
-		j = i - 1; //shift
-		if ((j != 0) && (j%chunk_size==0))
+		if ( (j != 0) && ((j)%chunk_size) == 0)
 		{
 			temp=temp->next;
 		}
-		m = j%chunk_size; //our index in chunk
-		//printf("\t%i\n",m);
-		if ((temp->x[m] == '"') && (flag==0))
+		if ( (l != 0) && ((l)%chunk_size) == 0)
 		{
-			p = i+1;
-			flag = 1;
-		} else if ((temp->x[m] == '"') && (flag==1)) {
-			q = i-1;
-			linetemp->word = StringMakeNewFrom(str,p,q);
-			linetemp->next = malloc(sizeof(*line));
+			newtemp->next=malloc(sizeof(*newstr));
+			newtemp=newtemp->next;
+		}
+		newtemp->x[(l%chunk_size)]=temp->x[(j%chunk_size)];
+	}
+	l = j-s1; //index in chunk of newstr
+	//ending
+	if ( ((l)%chunk_size) != 0 )
+	{
+		newtemp->x[(l%chunk_size)]=EOF;
+	}
+	newtemp->next=NULL;
+	return newstr;
+}
+
+char StringCharAt(struct String *str, int i)
+{
+	i = i - 1;
+	if ((i != 0) && (i%chunk_size==0))
+	{
+		str=str->next;
+	}
+	return str->x[i%chunk_size];
+}
+
+void CommandLinePrint(const struct CommandLine *line)
+{
+	while (line!=NULL)
+	{
+		StringPrint(line->word);
+		printf("\t\t\t size:%i",StringSize(line->word));
+		printf("\n");
+		line=line->next;
+	}
+}
+
+struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *str, int s1, int s2)
+{
+	struct CommandLine *linetemp, *lineprev;
+	int first = 1;
+	linetemp = line;
+	if (s1<=s2)
+	{
+		while(linetemp!=NULL)
+		{
+			lineprev = linetemp;
 			linetemp = linetemp->next;
+			first = 0;
+		}
+		if (first)
+		{
+			linetemp = malloc(sizeof(*line));
+			linetemp->word = StringMakeNewFrom(str,s1,s2);
 			linetemp->next = NULL;
-			flag = 0;
+			line = linetemp;
 		} else {
-		// if spaces
-			if ((temp->x[m]!=' ') && ((flagspace==0) && (flag==0)))
-			{
-				p = i;
-				flagspace = 1;
-			} else if (((temp->x[m]==' ') || (temp->x[m])=='\n') && ((flagspace==1) && (flag==0)))
-			{
-				q = i;
-				linetemp->word = StringMakeNewFrom(str,p,q);
-				linetemp->next = malloc(sizeof(*line));
-				linetemp = linetemp->next;
-				linetemp->next = NULL;
-				flagspace = 0;
-			}
+			lineprev->next = malloc(sizeof(*line));
+			linetemp = lineprev->next;
+			linetemp->word = StringMakeNewFrom(str,s1,s2);
+			linetemp->next = NULL;
 		}
 	}
-	return line;
 	
+	return line;
+}
+
+struct CommandLine *CommandLineFromString(struct String *str)
+{
+	struct CommandLine *line;
+	line = NULL;
+	//we need better peace ->
+	//-> of this
+	int size;
+	int i;
+	//int first = 0;
+	int p,q; //our separators
+	//we're moving through our string, if ' ' or '"' => separate
+	i=1; //we point at first symbol
+	size = StringSize(str);
+	while(i<=size)
+	{
+		if (StringCharAt(str,i)=='"')
+		{
+			i = i + 1;
+			//if i > size => error: unbalanced "
+			p = i; //save our 1st separator
+			while(i<=size && (StringCharAt(str,i)!='"'))
+			{
+				i += 1;
+			}
+			//if (i > size) => error: unbalanced "
+			q = i - 1; //save our 2d separator
+			i = i + 1;
+			line = CommandLineAddWord(line,str,p,q);
+		} else
+			if (StringCharAt(str,i)!=' ') 
+			{
+			p = i;
+			i += 1;
+			while(i<=size && (StringCharAt(str,i)!=' '))
+			{
+				i += 1;
+			}
+			q = i - 1;
+		//!!!if char = "\n" ->
+			if (StringCharAt(str,q) == '\n')
+			{
+				q = q - 1;
+			}
+		//!!! <-
+			line = CommandLineAddWord(line,str,p,q);
+		} else {
+			i += 1;
+		}
+		//printf("I SEE CHAR = (%c)\n",StringCharAt(str,i));
+	}
+	return line;
 }
 
 int main()
 {
-	struct CommandWord *line;
-	struct string *str;
+	struct CommandLine *line;
+	struct String *str;
 	printf("Input string:\n");
 	str = StringFill();
-	
 	printf("Your string:\n");
 	StringPrint(str);
-	//printf("\n");
+	/*
 	printf("Size of your string:\n");
 	printf("%i\n",StringSize(str));
+	*/
 	/*
 	StringFree(str);
 	str = NULL;
@@ -277,17 +248,29 @@ int main()
 	StringPrint(str);
 	*/
 	/*
-	struct string *str1;
-	str1 = StringMakeNewFrom(str,1,StringSize(str));
+	struct String *str1;
+	str1 = StringMakeNewFrom(str,2,6);
 	printf("Ive made another string\n");
 	StringPrint(str1);
 	printf("\n");
 	printf("Which size is\n%i\n",StringSize(str1));
 	*/
-	line = StringSeparate(str);
+	
+	
+	//we have problem with test "12345"
+	/*
+	line = CommandLineFromString(str);
 	printf("Your command words from line\n");
 	CommandLinePrint(line);
-	printf("\n");
+	*/
 	
-	return 0;
+	/*
+	int i = 9;
+	printf("Your char at %i is %c\n",i,StringCharAt(str,i));
+	*/
+	
+	
+	
+	
+	
 }
