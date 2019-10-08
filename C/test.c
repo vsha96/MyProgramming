@@ -128,7 +128,14 @@ struct String *StringMakeNewFrom(struct String *str,int s1,int s2)
 char StringCharAt(struct String *str, int i)
 {
 	i = i - 1;
-	if ((i != 0) && (i%chunk_size==0))
+	int j;
+	/*
+	if ((i != 0) && (i%chunk_size == 0))
+	{
+		str=str->next;
+	}
+	*/
+	for (j=0;j<(i/chunk_size);j++)
 	{
 		str=str->next;
 	}
@@ -179,48 +186,60 @@ struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *
 struct CommandLine *CommandLineFromString(struct String *str)
 {
 	struct CommandLine *line;
+	//struct String *empty; //possible desicion for s1>s2
 	line = NULL;
 	//we need better peace ->
 	//-> of this
 	int size;
 	int i;
 	//int first = 0;
-	int p,q; //our separators
+	int s1,s2; //our separators
 	//we're moving through our string, if ' ' or '"' => separate
 	i=1; //we point at first symbol
 	size = StringSize(str);
-	while(i<=size)
+	while(i<=size-1) //-1 cause we have \n!!!
 	{
 		if (StringCharAt(str,i)=='"')
 		{
 			i = i + 1;
 			//if i > size => error: unbalanced "
-			p = i; //save our 1st separator
+			s1 = i; //save our 1st separator
 			while(i<=size && (StringCharAt(str,i)!='"'))
 			{
+	//printf("CharAt %i = (%c)\n",i,StringCharAt(str,i));
 				i += 1;
 			}
-			//if (i > size) => error: unbalanced "
-			q = i - 1; //save our 2d separator
+	//???errors in procedure???
+			if (i > size)
+			{
+				printf("error:: unbalanced commas\n");
+				break;
+			}
+			s2 = i - 1; //save our 2d separator
+			if (s1 > s2)
+			{
+				printf("error:: empty commas\n");
+				break;
+			}
+			line = CommandLineAddWord(line,str,s1,s2);
 			i = i + 1;
-			line = CommandLineAddWord(line,str,p,q);
 		} else
 			if (StringCharAt(str,i)!=' ') 
 			{
-			p = i;
+			s1 = i;
 			i += 1;
 			while(i<=size && (StringCharAt(str,i)!=' '))
 			{
 				i += 1;
 			}
-			q = i - 1;
+			s2 = i - 1;
 		//!!!if char = "\n" ->
-			if (StringCharAt(str,q) == '\n')
+			if (StringCharAt(str,s2) == '\n')
 			{
-				q = q - 1;
+				s2 = s2 - 1;
 			}
 		//!!! <-
-			line = CommandLineAddWord(line,str,p,q);
+			line = CommandLineAddWord(line,str,s1,s2);
 		} else {
 			i += 1;
 		}
@@ -235,8 +254,11 @@ int main()
 	struct String *str;
 	printf("Input string:\n");
 	str = StringFill();
+	
+	/*
 	printf("Your string:\n");
 	StringPrint(str);
+	*/
 	/*
 	printf("Size of your string:\n");
 	printf("%i\n",StringSize(str));
@@ -258,15 +280,19 @@ int main()
 	
 	
 	//we have problem with test "12345"
-	/*
+	
 	line = CommandLineFromString(str);
 	printf("Your command words from line\n");
 	CommandLinePrint(line);
-	*/
+	
+	
 	
 	/*
-	int i = 9;
-	printf("Your char at %i is %c\n",i,StringCharAt(str,i));
+	int i;
+	for (i=1;i<=StringSize(str);i++)
+	{
+		printf("Your char at %i is %c\n",i,StringCharAt(str,i));
+	}
 	*/
 	
 	
