@@ -147,9 +147,19 @@ void CommandLinePrint(const struct CommandLine *line)
 	while (line!=NULL)
 	{
 		StringPrint(line->word);
-		printf("\t\t\t size:%i",StringSize(line->word));
+		//printf("\t\t\t size:%i",StringSize(line->word));
 		printf("\n");
 		line=line->next;
+	}
+}
+
+void CommandLineFree(struct CommandLine *line)
+{
+	if (line != NULL)
+	{
+		CommandLineFree(line->next);
+		StringFree(line->word);
+		free(line);
 	}
 }
 
@@ -254,7 +264,6 @@ int main()
 	struct String *str;
 	printf("Input string:\n");
 	str = StringFill();
-	
 	/*
 	printf("Your string:\n");
 	StringPrint(str);
@@ -286,6 +295,8 @@ int main()
 	CommandLinePrint(line);
 	
 	
+	StringFree(str);
+	CommandLineFree(line);
 	
 	/*
 	int i;
