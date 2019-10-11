@@ -1,16 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 struct CommandLine {
-	struct String *word;
+	struct String *word; //CHANGES FOR 2d STEP
 	struct CommandLine *next;
 };
 enum {
 	chunk_size = 8
 };
-/*
-for error 
-fprintf(stderr,"error...");
-*/
 struct String {
 	int x[chunk_size]; //elements of chunk
 	struct String *next;
@@ -129,16 +125,16 @@ struct String *StringMakeNewFrom(struct String *str,int s1,int s2)
 	return newstr;
 }
 
+//CHANGES FOR 2d STEP
+char *StringMakeRealStringFrom(struct String *str, int s1, int s2)
+{
+	return 0;	
+}
+
 char StringCharAt(struct String *str, int i)
 {
 	i = i - 1;
 	int j;
-	/*
-	if ((i != 0) && (i%chunk_size == 0))
-	{
-		str=str->next;
-	}
-	*/
 	for (j=0;j<(i/chunk_size);j++)
 	{
 		str=str->next;
@@ -146,6 +142,7 @@ char StringCharAt(struct String *str, int i)
 	return str->x[i%chunk_size];
 }
 
+//!!!CHANGES FOR 2d STEP
 void CommandLinePrint(const struct CommandLine *line)
 {
 	while (line!=NULL)
@@ -157,6 +154,7 @@ void CommandLinePrint(const struct CommandLine *line)
 	}
 }
 
+//CHANGES FOR 2d STEP
 void CommandLineFree(struct CommandLine *line)
 {
 	if (line != NULL)
@@ -167,8 +165,9 @@ void CommandLineFree(struct CommandLine *line)
 	}
 }
 
+//CHANGES 2d STEP
 struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *str, int s1, int s2)
-{
+{ //we can use recursion, it will be more compact code here with it
 	struct CommandLine *linetemp, *lineprev;
 	int first = 1;
 	linetemp = line;
@@ -183,12 +182,14 @@ struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *
 		if (first)
 		{
 			linetemp = malloc(sizeof(*line));
+			//StringMakeRealStringFrom
 			linetemp->word = StringMakeNewFrom(str,s1,s2);
 			linetemp->next = NULL;
 			line = linetemp;
 		} else {
 			lineprev->next = malloc(sizeof(*line));
 			linetemp = lineprev->next;
+			//---ii---
 			linetemp->word = StringMakeNewFrom(str,s1,s2);
 			linetemp->next = NULL;
 		}
@@ -295,7 +296,7 @@ int main()
 	//we have problem with test "12345"
 	
 	line = CommandLineFromString(str);
-	printf("Your command words from line\n");
+	printf("Your command words from line:\n");
 	CommandLinePrint(line);
 	
 	
