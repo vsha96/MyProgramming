@@ -4,6 +4,8 @@
 #include <sys/wait.h>
 struct CommandLine {
 	char *word;
+	/*for 3d step*/
+	int status; /*usual=0, bg=1*/
 	struct CommandLine *next;
 };
 enum {
@@ -187,7 +189,7 @@ void CommandLinePrint(const struct CommandLine *line)
 {
 	while (line!=NULL)
 	{
-		printf("%s",line->word);
+		printf("[%s]",line->word);
 		/*printf("\t\t\t size:%lu",sizeof(line->word));*/
 		printf("\n");
 		line=line->next;
@@ -214,7 +216,22 @@ void CommandLineFree(struct CommandLine *line)
 	}
 }
 
-struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *str, int s1, int s2)
+int CommandLineEmpty(const struct CommandLine *line)
+{
+	if (line == NULL)
+	{
+		return 1;
+	} else {
+		if (line->word[0] == 0)
+		{
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+}
+
+struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *str, int s1, int s2, int ChangeStatus)
 { /*we can use recursion, it will be more compact code here with it*/
 	struct CommandLine *linetemp, *lineprev;
 	int first = 1;
@@ -227,18 +244,19 @@ struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *
 			linetemp = linetemp->next;
 			first = 0;
 		}
-		if (first)
+		if (first && (str != NULL))
 		{
 			linetemp = malloc(sizeof(*line));
 			linetemp->word = StringMakeRealStringFrom(str,s1,s2);
 			linetemp->next = NULL;
 			line = linetemp;
-		} else {
+		} else if (str != NULL){
 			lineprev->next = malloc(sizeof(*line));
 			linetemp = lineprev->next;
 			linetemp->word = StringMakeRealStringFrom(str,s1,s2);
 			linetemp->next = NULL;
 		}
+		line->status = ChangeStatus;
 	}	
 	/* is this free memory? */
 	linetemp = NULL;
@@ -269,11 +287,15 @@ struct CommandLine *CommandLineFromString(struct String *str)
 			s2 = i - 1; /*save our 2d separator*/
 			if (i > size){ printf("error:: unbalanced commas\n"); break; }
 			if (s1 > s2){ printf("error:: empty commas\n"); break; }
-			line = CommandLineAddWord(line,str,s1,s2);
+			line = CommandLineAddWord(line,str,s1,s2,0);
 			i = i + 1;
-		} else
-			if (StringCharAt(str,i)!=' ') 
-			{
+		} else if (StringCharAt(str,i)=='&') {
+			/*CHANGE STATUS and make string without & at the end*/	
+			/*!there is problem when we have spaces after &*/
+			if (i < size){ printf("error:: misplaced &\n"); break; }
+			line = CommandLineAddWord(line,NULL,0,0,1);
+			i += 1;
+		} else if (StringCharAt(str,i)!=' ') {
 			s1 = i;
 			i += 1;
 			while(i<=size && (StringCharAt(str,i)!=' '))
@@ -284,7 +306,7 @@ struct CommandLine *CommandLineFromString(struct String *str)
 		/*
 			if (StringCharAt(str,s2) == '\n') { s2 = s2 - 1; }
 		*/
-			line = CommandLineAddWord(line,str,s1,s2);
+			line = CommandLineAddWord(line,str,s1,s2,0);	
 		} else {
 			i += 1;
 		}
@@ -294,12 +316,13 @@ struct CommandLine *CommandLineFromString(struct String *str)
 	{
 		struct String *str0;
 		str0 = malloc(sizeof(str0)); str0->x[0] = 0; str0->x[1] = EOF;
-		line = CommandLineAddWord(line,str0,1,1);
+		line = CommandLineAddWord(line,str0,1,1,0);
 		free(str0); str0 = NULL;
 	}
 	return line;
 }
 
+/*======CONVERTE LINE equal CHAR ** NAME======*/
 char **CommandLineConverter(const struct CommandLine *line)
 { /*our |line| became |cline|*/
 	int i, size = CommandLineSize(line);
@@ -335,6 +358,7 @@ void ClineFree(char ** cline)
 	free(cline);
 }
 
+/*======COMMAND LINE======*/
 int CommandCD(const struct CommandLine *line)
 {
 	if (RealStringEqual(line->word,"cd"))
@@ -344,20 +368,31 @@ int CommandCD(const struct CommandLine *line)
 		return 0;
 	}
 }
-/*
-int CommandBackground(const struct CommandLine *line)
+
+int CommandBG(const struct CommandLine *line)
 {
-	const struct CommandLine *lineprev;
-	while()
+	if (line == NULL)
 	{
-		
+		printf("oh fuck\n"); return 0;
+	} else {
+		if (line->status == 1)
+		{
+			/*printf("its bg\n");*/
+			return 1;
+		} else {
+			return 0;
+		}
 	}
 }
-*/
+
 void CommandLineProcessor(const struct CommandLine *line)
 { 
-	int r,p;
+	int r,pid;
+	int kpid; /*killed pid*/
 	char **cline = CommandLineConverter(line);
+	/*cleaning*/
+	while ( (kpid = wait4(-1,NULL,WNOHANG,NULL)) > 0 ){}
+	/*cleaning*/
 	if (CommandCD(line))
 	{
 		r = chdir(cline[1]);
@@ -365,9 +400,22 @@ void CommandLineProcessor(const struct CommandLine *line)
 		{
 			perror(cline[1]);
 		}
+	} else if (CommandBG(line)) {
+		/*printf("its bg in processor\n");*/
+		pid = fork();
+		if (pid == 0)
+		{
+			if (!RealStringEqual(cline[0],""))
+			{
+				execvp(cline[0],cline);
+				perror(cline[0]);
+				fflush(stderr);
+				exit(1);
+			}
+		}	
 	} else {
-		p = fork();
-		if (p == 0)
+		pid = fork();
+		if (pid == 0)
 		{
 			/*printf("cline[0] = [%s]\n",cline[0]);*/
 			if (!RealStringEqual(cline[0],""))
@@ -378,7 +426,7 @@ void CommandLineProcessor(const struct CommandLine *line)
 				exit(1);
 			}
 		}
-		wait(NULL);
+		while ( (kpid = wait(NULL)) != pid ){}
 	}
 	ClineFree(cline);
 }
@@ -396,6 +444,17 @@ int main()
 		str = StringFill();
 		
 		line = CommandLineFromString(str);
+		
+		if (CommandLineEmpty(line))
+		{
+			StringFree(str);
+			CommandLineFree(line);	
+			continue;
+		}
+		/*
+		printf("your line\n");
+		CommandLinePrint(line);
+		*/
 		
 		/*
 		char **cline;
