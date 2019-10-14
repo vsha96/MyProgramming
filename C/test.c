@@ -1,23 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 struct CommandLine {
 	char *word;
 	struct CommandLine *next;
 };
-
-int RealStringComp(char *s1, char *s2);
-{
-	int i = 0;
-	while(s1[i] != 0 || s2[i] != 0)
-	{
-		
-	}
-	if ()
-	return 1;
-
-	//or
-	return 0;
-}
 
 int main()
 {
@@ -31,7 +18,8 @@ int main()
 	int i = 250;
 	printf("%c\n",i);	
 	*/
-
+	
+	/*
 	char *p;
 	p = "cd";
 	
@@ -43,9 +31,13 @@ int main()
 	{
 		//we must do smt
 	}
-
-
-
+	*/
+	
+	char **p;
+	p = malloc(2*sizeof(**p));
+	p[0] = "./shell";
+	p[1] = NULL;
+	exevp(p[0],p);
 
 
 
