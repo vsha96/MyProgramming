@@ -10,7 +10,7 @@ enum {
 	chunk_size = 8
 };
 struct String {
-	int x[chunk_size]; //elements of chunk
+	int x[chunk_size]; /* elements of chunk */
 	struct String *next;
 };
 
@@ -23,12 +23,12 @@ memory clean?
 
 struct String *StringFill()
 {
-	struct String *str,*temp; //we use it when we create another buffer
+	struct String *str,*temp; /*we use it when we create another buffer*/
 	int i=0;
-	int c; //our char with EOF
+	int c; /*our char with EOF*/
 	str = malloc(sizeof(*str));
 	temp = str;
-	while((c = getchar()) != '\n')//EOF)
+	while((c = getchar()) != '\n') /* EOF) */
 	{
 		if (i == chunk_size)
 		{
@@ -39,7 +39,7 @@ struct String *StringFill()
 		temp->x[i]=c;
 		i++;
 	}
-	//if (c == EOF)
+	/*if (c == EOF)*/
 	if (i != chunk_size)
 	{
 		temp->x[i]=EOF;
@@ -53,9 +53,9 @@ struct String *StringFill()
 
 void StringPrint(const struct String *str)
 {
-	const struct String *temp; //what it does?
+	const struct String *temp;
 	int i=0;
-	int c; //our char with EOF
+	int c; /*our char with EOF*/
 	temp = str;
 	while(temp!=NULL)
 	{
@@ -69,7 +69,7 @@ void StringPrint(const struct String *str)
 	}
 }
 
-void StringFree(struct String *str) //we need test for this thing
+void StringFree(struct String *str)
 {
 	if (str != NULL)
 	{
@@ -102,19 +102,19 @@ struct String *StringMakeNewFrom(struct String *str,int s1,int s2)
 	int i,j,l;
 	temp = str;
 	s1 -= 1; s2 -= 1; /*shift*/
-	s2 = s2 - s1; //pass few lines we'll make another base
-	//move to our 1st separator
+	s2 = s2 - s1; /*pass few lines we'll make another base*/
+	/*move to our 1st separator*/
 	for (i=0;i<(s1/chunk_size);i++)
 	{
 		temp = temp->next;
 	}
-	s1 = s1 % chunk_size; //we made another base
-	s2 = s1 + s2; //s2 points in new base
+	s1 = s1 % chunk_size; /*we made another base*/
+	s2 = s1 + s2; /*s2 points in new base*/
 	newstr = malloc(sizeof(*newstr));
 	newtemp = newstr;
 	for (j=s1;j<=s2;j++)
 	{
-		l = j-s1; //index in chunk of newstr
+		l = j-s1; /*index in chunk of newstr*/
 		if ( (j != 0) && ((j)%chunk_size) == 0)
 		{
 			temp=temp->next;
@@ -126,8 +126,8 @@ struct String *StringMakeNewFrom(struct String *str,int s1,int s2)
 		}
 		newtemp->x[(l%chunk_size)]=temp->x[(j%chunk_size)];
 	}
-	l = j-s1; //index in chunk of newstr
-	//ending
+	l = j-s1; /*index in chunk of newstr*/
+	/*ending*/
 	if ( ((l)%chunk_size) != 0 )
 	{
 		newtemp->x[(l%chunk_size)]=EOF;
@@ -188,7 +188,7 @@ void CommandLinePrint(const struct CommandLine *line)
 	while (line!=NULL)
 	{
 		printf("%s",line->word);
-		//printf("\t\t\t size:%lu",sizeof(line->word));
+		/*printf("\t\t\t size:%lu",sizeof(line->word));*/
 		printf("\n");
 		line=line->next;
 	}
@@ -215,7 +215,7 @@ void CommandLineFree(struct CommandLine *line)
 }
 
 struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *str, int s1, int s2)
-{ //we can use recursion, it will be more compact code here with it
+{ /*we can use recursion, it will be more compact code here with it*/
 	struct CommandLine *linetemp, *lineprev;
 	int first = 1;
 	linetemp = line;
@@ -239,8 +239,7 @@ struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *
 			linetemp->word = StringMakeRealStringFrom(str,s1,s2);
 			linetemp->next = NULL;
 		}
-	} /*else => error*/
-	
+	}	
 	/* is this free memory? */
 	linetemp = NULL;
 	lineprev = NULL;
@@ -251,37 +250,25 @@ struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *
 struct CommandLine *CommandLineFromString(struct String *str)
 {
 	struct CommandLine *line;
-	//struct String *empty; //possible desicion for s1>s2
 	line = NULL;
 	int i, size;
-	//int first = 0;
-	int s1,s2; //our separators
-	//we're moving through our string, if ' ' or '"' => separate
-	i=1; //we point at first symbol
+	int s1,s2; /*our separators*/
+	/*we're moving through our string, if ' ' or '"' => separate*/
+	i=1; /*we're pointing at first symbol*/
 	size = StringSize(str);
 	while(i<=size)
 	{
 		if (StringCharAt(str,i)=='"')
 		{
 			i = i + 1;
-			//if i > size => error: unbalanced "
-			s1 = i; //save our 1st separator
+			s1 = i; /*save our 1st separator*/
 			while(i<=size && (StringCharAt(str,i)!='"'))
 			{
 				i += 1;
 			}
-	//???errors in procedure???
-			if (i > size)
-			{
-				printf("error:: unbalanced commas\n");
-				break;
-			}
-			s2 = i - 1; //save our 2d separator
-			if (s1 > s2)
-			{
-				printf("error:: empty commas\n");
-				break;
-			}
+			s2 = i - 1; /*save our 2d separator*/
+			if (i > size){ printf("error:: unbalanced commas\n"); break; }
+			if (s1 > s2){ printf("error:: empty commas\n"); break; }
 			line = CommandLineAddWord(line,str,s1,s2);
 			i = i + 1;
 		} else
@@ -294,29 +281,22 @@ struct CommandLine *CommandLineFromString(struct String *str)
 				i += 1;
 			}
 			s2 = i - 1;
-		//!!!if char = "\n" ->
-			if (StringCharAt(str,s2) == '\n')
-			{
-				s2 = s2 - 1;
-			}
-		//!!! <-
+		/*
+			if (StringCharAt(str,s2) == '\n') { s2 = s2 - 1; }
+		*/
 			line = CommandLineAddWord(line,str,s1,s2);
 		} else {
 			i += 1;
 		}
-		//printf("I SEE CHAR = (%c)\n",StringCharAt(str,i));
+		/*printf("I SEE CHAR = (%c)\n",StringCharAt(str,i));*/
 	}
-	//!!!!!!
 	if (size == 0)
 	{
 		struct String *str0;
-		str0 = malloc(sizeof(str0));
-		str0->x[0] = 0;
-		str0->x[1] = EOF;
+		str0 = malloc(sizeof(str0)); str0->x[0] = 0; str0->x[1] = EOF;
 		line = CommandLineAddWord(line,str0,1,1);
-		
+		free(str0); str0 = NULL;
 	}
-	
 	return line;
 }
 
@@ -364,7 +344,16 @@ int CommandCD(const struct CommandLine *line)
 		return 0;
 	}
 }
-
+/*
+int CommandBackground(const struct CommandLine *line)
+{
+	const struct CommandLine *lineprev;
+	while()
+	{
+		
+	}
+}
+*/
 void CommandLineProcessor(const struct CommandLine *line)
 { 
 	int r,p;
@@ -380,7 +369,7 @@ void CommandLineProcessor(const struct CommandLine *line)
 		p = fork();
 		if (p == 0)
 		{
-			//printf("cline[0] = [%s]\n",cline[0]);
+			/*printf("cline[0] = [%s]\n",cline[0]);*/
 			if (!RealStringEqual(cline[0],""))
 			{
 				execvp(cline[0],cline);
@@ -416,7 +405,7 @@ int main()
 		printf("your cline\n");
 		ClinePrint(cline);
 		*/
-		/*!!!problem with empty string*/
+		
 		CommandLineProcessor(line);
 		
 		StringFree(str);
