@@ -152,6 +152,16 @@ char StringCharAt(const struct String *str, int i)
 	return str->x[i%chunk_size];
 }
 
+int StringSymbolsAfter(const struct String *str, int i)
+{
+	int j, size = StringSize(str);
+	for (j=i+1;j<=size;j++)
+	{
+		if ((StringCharAt(str,j)) != ' ') { return 1; }
+	}
+	return 0;
+}
+
 char *StringMakeRealStringFrom(struct String *str, int s1, int s2)
 { /*we add it to dont overwrite all of this*/
 	struct String *temp;	
@@ -265,6 +275,22 @@ struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *
 	return line;
 }
 
+struct CommandLine *CommandLineChangeStatus(struct CommandLine *line, int newstat)
+{
+	int size = CommandLineSize(line);
+	if (size == 0)
+	{
+		struct String *str0;
+		str0 = malloc(sizeof(str0)); str0->x[0] = 0; str0->x[1] = EOF;
+		line = CommandLineAddWord(line,str0,1,1,newstat);
+		free(str0); str0 = NULL;
+	} else {
+		line->status = newstat;
+	}
+	return line;
+
+}
+
 struct CommandLine *CommandLineFromString(struct String *str)
 {
 	struct CommandLine *line;
@@ -285,20 +311,23 @@ struct CommandLine *CommandLineFromString(struct String *str)
 				i += 1;
 			}
 			s2 = i - 1; /*save our 2d separator*/
-			if (i > size){ printf("error:: unbalanced commas\n"); break; }
-			if (s1 > s2){ printf("error:: empty commas\n"); break; }
+			if (i > size) { printf("error:: unbalanced commas\n"); break; }
+			if (s1 > s2) { printf("error:: empty commas\n"); break; }
 			line = CommandLineAddWord(line,str,s1,s2,0);
 			i = i + 1;
 		} else if (StringCharAt(str,i)=='&') {
 			/*CHANGE STATUS and make string without & at the end*/	
 			/*!there is problem when we have spaces after &*/
-			if (i < size){ printf("error:: misplaced &\n"); break; }
-			line = CommandLineAddWord(line,NULL,0,0,1);
+			if (StringSymbolsAfter(str,i))
+			{
+				line = CommandLineChangeStatus(line,1);
+				printf("error:: misplaced &\n"); break;
+			}
 			i += 1;
 		} else if (StringCharAt(str,i)!=' ') {
 			s1 = i;
 			i += 1;
-			while(i<=size && (StringCharAt(str,i)!=' '))
+			while(i<=size && (StringCharAt(str,i)!=' ') && StringCharAt(str,i)!='&')
 			{
 				i += 1;
 			}
@@ -314,10 +343,7 @@ struct CommandLine *CommandLineFromString(struct String *str)
 	}
 	if (size == 0)
 	{
-		struct String *str0;
-		str0 = malloc(sizeof(str0)); str0->x[0] = 0; str0->x[1] = EOF;
-		line = CommandLineAddWord(line,str0,1,1,0);
-		free(str0); str0 = NULL;
+		line = CommandLineChangeStatus(line,0);
 	}
 	return line;
 }
@@ -445,12 +471,13 @@ int main()
 		
 		line = CommandLineFromString(str);
 		
-		if (CommandLineEmpty(line))
+		if (CommandLineEmpty(line) /*|| CommandLineIllegal*/)
 		{
 			StringFree(str);
 			CommandLineFree(line);	
 			continue;
 		}
+		
 		/*
 		printf("your line\n");
 		CommandLinePrint(line);
