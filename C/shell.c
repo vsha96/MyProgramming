@@ -5,7 +5,7 @@
 struct CommandLine {
 	char *word;
 	/*for 3d step*/
-	int status; /*usual=0, bg=1*/
+	int status; /*illegal=-1, usual=0, bg=1*/
 	struct CommandLine *next;
 };
 enum {
@@ -311,8 +311,16 @@ struct CommandLine *CommandLineFromString(struct String *str)
 				i += 1;
 			}
 			s2 = i - 1; /*save our 2d separator*/
-			if (i > size) { printf("error:: unbalanced commas\n"); break; }
-			if (s1 > s2) { printf("error:: empty commas\n"); break; }
+			if (i > size)
+			{
+				line = CommandLineChangeStatus(line,-1);
+				printf("error:: unbalanced commas\n"); break;
+			}
+			if (s1 > s2)
+			{
+				line = CommandLineChangeStatus(line,-1);
+				printf("error:: empty commas\n"); break;
+			}
 			line = CommandLineAddWord(line,str,s1,s2,0);
 			i = i + 1;
 		} else if (StringCharAt(str,i)=='&') {
@@ -320,9 +328,10 @@ struct CommandLine *CommandLineFromString(struct String *str)
 			/*!there is problem when we have spaces after &*/
 			if (StringSymbolsAfter(str,i))
 			{
-				line = CommandLineChangeStatus(line,1);
+				line = CommandLineChangeStatus(line,-1);
 				printf("error:: misplaced &\n"); break;
 			}
+			line = CommandLineChangeStatus(line,1);
 			i += 1;
 		} else if (StringCharAt(str,i)!=' ') {
 			s1 = i;
@@ -403,7 +412,23 @@ int CommandBG(const struct CommandLine *line)
 	} else {
 		if (line->status == 1)
 		{
-			/*printf("its bg\n");*/
+			/*printf("it's bg\n");*/
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+}
+
+int CommandIllegal(const struct CommandLine *line)
+{
+	if (line == NULL)
+	{
+		printf("oh fuck\n"); return 0;
+	} else {
+		if (line->status == -1)
+		{
+			/*printf("it's illegal\n");*/
 			return 1;
 		} else {
 			return 0;
@@ -471,13 +496,13 @@ int main()
 		
 		line = CommandLineFromString(str);
 		
-		if (CommandLineEmpty(line) /*|| CommandLineIllegal*/)
+		if (CommandLineEmpty(line) || CommandIllegal(line))
 		{
 			StringFree(str);
 			CommandLineFree(line);	
 			continue;
 		}
-		
+
 		/*
 		printf("your line\n");
 		CommandLinePrint(line);
