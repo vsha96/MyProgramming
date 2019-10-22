@@ -5,7 +5,16 @@
 struct CommandLine {
 	char *word;
 	/*for 3d step*/
-	int status; /*illegal=-1, usual=0, bg=1*/
+	int status;
+	/*	illegal=-1, usual=0, bg=1
+		> = 2
+
+case:		exe > file
+			exe > exe ? exe > exe > file?
+
+		< = 3
+		>> = 4
+	*/
 	struct CommandLine *next;
 };
 enum {
@@ -143,7 +152,7 @@ struct String *StringMakeNewFrom(struct String *str,int s1,int s2)
 
 char StringCharAt(const struct String *str, int i)
 {
-	i = i - 1;
+	i = i - 1; /*shift*/
 	int j;
 	for (j=0;j<(i/chunk_size);j++)
 	{
@@ -171,7 +180,8 @@ char *StringMakeRealStringFrom(struct String *str, int s1, int s2)
 	p = malloc((size+1));
 	for (i=1;i<=size;i++)
 	{
-		p[i-1] =(char)StringCharAt(temp,i); 
+		p[i-1] = (char)StringCharAt(temp,i); 
+
 	}
 	p[i-1] = 0;
 	/* is this free memory? */
@@ -496,17 +506,20 @@ int main()
 		
 		line = CommandLineFromString(str);
 		
+		/*
+		printf("your line\n");
+		CommandLinePrint(line);
+		printf("your status: %i\n",line->status);
+		*/
+		
+
 		if (CommandLineEmpty(line) || CommandIllegal(line))
 		{
 			StringFree(str);
 			CommandLineFree(line);	
 			continue;
 		}
-
-		/*
-		printf("your line\n");
-		CommandLinePrint(line);
-		*/
+		
 		
 		/*
 		char **cline;
