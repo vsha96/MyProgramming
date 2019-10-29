@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+
 struct CommandLine {
 	char *word;
 	int status;
@@ -37,7 +38,7 @@ struct String *StringFill()
 	int c; /*our char with EOF*/
 	str = malloc(sizeof(*str));
 	temp = str;
-	while((c = getchar()) != '\n') /* EOF) */
+	while((c = getchar()) != '\n' && c != EOF) /* EOF) */
 	{
 		if (i == chunk_size)
 		{
@@ -221,6 +222,16 @@ void CommandLinePrint(const struct CommandLine *line)
 	printf("\n");
 }
 
+void CommandLinePackPrint(struct CommandLine **line)
+{
+	int i = 0;
+	while(line[i])
+	{
+		CommandLinePrint(line[i]);
+		i++;
+	}
+}
+
 int CommandLineSize(const struct CommandLine *line)
 {
 	int i=0;
@@ -238,6 +249,15 @@ void CommandLineFree(struct CommandLine *line)
 		CommandLineFree(line->next);
 		free(line->word);
 		free(line);
+	}
+}
+
+void CommandLinePackFree(struct CommandLine **line)
+{
+	while (*line != NULL)
+	{
+		CommandLineFree(line[0]);
+		line++;
 	}
 }
 
@@ -351,22 +371,22 @@ int StringCutCommas(struct CommandLine *line, struct String *str, int *i)
 }
 
 
-int StringCutAmpersand(struct CommandLine *line, struct String *str, int *i)
+int StringCutAmpersand(struct CommandLine **line, struct String *str, int *i)
 {
 	/*CHANGE STATUS and make string without & at the end*/	
 	/*!there is problem when we have spaces after &*/
-	if (CommandLineSize(line) == 0)
+	if (CommandLineSize(line[0]) == 0)
 	{	
-		line = CommandLineChangeStatus(line,-1);
+		line[0] = CommandLineChangeStatus(line[0],-1);
 		return -1;
 	}
 	if (StringSymbolsAfter(str,*i))
 	{
-		line = CommandLineChangeStatus(line,-1);
+		line[0] = CommandLineChangeStatus(line[0],-1);
 		printf("error:: misplaced &\n");
 		return -1;
 	}
-	line = CommandLineChangeStatus(line,1);
+	line[0] = CommandLineChangeStatus(line[0],1);
 	*i += 1;
 	return 0;
 }
@@ -402,60 +422,60 @@ int CountStreams(struct String *str)
 	return n;
 }
 
+/*
+line = malloc((1+1)*sizeof(*line));
 
-int StringCutStreams(struct CommandLine *line, struct String *str, int *i)
+if (!StringSymbolsAfter(str,*i+1)) //! what about >> ?
+			{
+				line = CommandLineChangeStatus(line,-1);
+				printf("error::missing argument after change stream\n");
+				return -1;
+			}
+*/
+int StringCutStreams(struct CommandLine **line, struct String *str, int *i, int *j /*number of line in pack of lines*/)
 {	
-	if (StringCharAt(str,*i) == '>')
+	int size = StringSize(str);
+	if (StringCharAt(str,*i) == '>' && (*i < size) && StringCharAt(str,*i+1) == '>')
 	{
-		if (StringCharAt(str,*i+1) == '>') /* >> */
-		{
-			line = CommandLineChangeStream(line,2);
-			if (!StringSymbolsAfter(str,*i+1)) /*! what about >> ?*/
-			{
-				line = CommandLineChangeStatus(line,-1);
-				printf("error::missing argument after change stream\n");
-				return -1;
-			}
-		} else {
-			line = CommandLineChangeStream(line,1);
-			if (!StringSymbolsAfter(str,*i)) /*! what about >> ?*/
-			{
-				line = CommandLineChangeStatus(line,-1);
-				printf("error::missing argument after change stream\n");
-				return -1;
-			}
-		}
-	} else { /* < */
-		line = CommandLineChangeStream(line,3);
-		if (!StringSymbolsAfter(str,*i)) /*! what about >> ?*/
-		{
-			line = CommandLineChangeStatus(line,-1);
-			printf("error::missing argument after change stream\n");
-			return -1;
-		}
+		line[0] = CommandLineChangeStream(line[0],2);
+		*i += 1;
+	} else if (StringCharAt(str,*i) == '<') {
+		line[0] = CommandLineChangeStream(line[0],3);
+	} else {
+		line[0] = CommandLineChangeStream(line[0],1);
 	}
-	*i += 1;
+	if (!StringSymbolsAfter(str,*i+1))
+	{
+		line[0] = CommandLineChangeStatus(line[0],-1);
+		printf("error:: missing argument after change stream\n");
+		return -1;
+	}
+	*i += 1; *j += 1;
 	return 0;
 }
 /*====== END OF SUPPORT ======*/
 
-struct CommandLine *CommandLineFromString(struct String *str)
+struct CommandLine **CommandLineFromString(struct String *str)
 {
-	struct CommandLine *line;
-	line = NULL;
+	struct CommandLine **line;
+	line = malloc((2+1)*sizeof(*line));
+	line[0] = NULL;
+	line[1] = NULL;
+	line[2] = NULL;
 	int s1, s2, c;
-	int i, size;
+	int i, j, size;
 	/*we're moving through our string, if ' ' or '"' => separate*/
+	j = 0;
 	i=1; /*we're pointing at first symbol*/
 	size = StringSize(str);
 	while(i<=size)
 	{
 		if (StringCharAt(str,i) == '"') {
-			if (StringCutCommas(line,str,&i)) break;
+			if (StringCutCommas(line[j],str,&i)) break;
 		} else if (StringCharAt(str,i) == '&') {
 			if (StringCutAmpersand(line,str,&i)) break;
 		} else if ((c = StringCharAt(str,i)) == '>' || c == '<') {
-			if (StringCutStreams(line,str,&i)) break;
+			if (StringCutStreams(line,str,&i,&j)) break;
 		} else if (StringCharAt(str,i) != ' ') {
 			/*StringCutWords(line,str,&i);*/
 			s1 = i;
@@ -468,13 +488,13 @@ struct CommandLine *CommandLineFromString(struct String *str)
 		/*
 			if (StringCharAt(str,s2) == '\n') { s2 = s2 - 1; }
 		*/
-			line = CommandLineAddWord(line,str,s1,s2);
+			line[j] = CommandLineAddWord(line[j],str,s1,s2);
 		} else {
 			i += 1;
 		}
 		/*printf("I SEE CHAR = (%c)\n",StringCharAt(str,i));*/
 	}
-	if (size == 0) line = CommandLineChangeStatus(line,0);
+	if (size == 0) line[0] = CommandLineChangeStatus(line[0],0);
 
 	return line;
 }
@@ -561,67 +581,80 @@ int CommandIllegal(const struct CommandLine *line)
 void CommandLineStream(const struct CommandLine *line)
 {}
 */
-void CommandLineProcessor(const struct CommandLine *line)
+
+void StreamOpen(int st, int fd, char **cline1)
+{
+	if (st == 1) /* > */
+		fd = open(cline1[0],O_WRONLY|O_CREAT|O_TRUNC,0666);	
+	if (st == 2) /* >> */
+		fd = open(cline1[0],O_WRONLY|O_CREAT|O_APPEND,0666);
+	if (st == 3) /* < */
+		fd = open(cline1[0],O_RDONLY,0666);	
+	if (fd == -1)
+	{
+		perror(cline1[0]);
+		exit(1);
+	}
+	if (st == 3)
+	{
+		dup2(fd,0);
+	} else {	
+		dup2(fd,1);
+	}
+}
+
+void CLineExecute(struct CommandLine **line, char **cline, char **cline1)
+{
+	int st,fd = 0; /*stream, file descriptor*/
+
+	if ((st = line[0]->stream) != 0)
+	{
+		StreamOpen(st, fd, cline1); /*put (&fd) for close(fd) lower*/
+	}
+
+	execvp(cline[0],cline);
+	perror(cline[0]);
+	fflush(stderr);
+	exit(1);
+	/*
+	if (st != 0)
+	{
+		close(fd);
+	}
+	*/
+}
+
+
+
+void CommandLineProcessor(struct CommandLine **line)
 { 
 	int r,pid;
 	int kpid; /*killed pid*/
-	int st,fd; /*stream, file descriptor*/
-	char **cline = CommandLineConverter(line);
+	char **cline = CommandLineConverter(line[0]);
+	char **cline1 = CommandLineConverter(line[1]);
+	/*printf("your strings [%s] [%s]\n",cline[0],cline1[0]);*/
 	/*cleaning*/
 	while ( (kpid = wait4(-1,NULL,WNOHANG,NULL)) > 0 ){}
-	if (CommandCD(line))
+	if (CommandCD(line[0]))
 	{
 		r = chdir(cline[1]);
 		if (r == -1)
 		{
 			perror(cline[1]);
 		}
-	} else if (CommandBG(line)) {
-		/*printf("its bg in processor\n");*/
-		pid = fork();
-		if (pid == 0)
-		{
-			if (!RealStringEqual(cline[0],"")) /*I have CLEmpty in main*/
-			{
-				execvp(cline[0],cline);
-				perror(cline[0]);
-				fflush(stderr);
-				exit(1);
-			}
-		}	
 	} else {
-		if ((st = line->stream) != 0)
-		{
-			if (st == 1)
-			{
-				printf("FD is opened\n");
-				fd = open(cline[1],O_WRONLY,O_CREAT,O_TRUNC,0666);
-				dup2(fd,1);
-			}
-		}
-		cline[1] = NULL;
-
 		pid = fork();	
 		if (pid == 0)
 		{
-			/*printf("cline[0] = [%s]\n",cline[0]);*/
-			if (!RealStringEqual(cline[0],""))
-			{
-				execvp(cline[0],cline);
-				perror(cline[0]);
-				fflush(stderr);
-				exit(1);
-			}
+			CLineExecute(line, cline, cline1);
 		}
-		while ( (kpid = wait(NULL)) != pid ){}
-		
-		if (st != 0)
+		if (!CommandBG(line[0]))
 		{
-			printf("FD is closed\n");
-			close(fd);
+			while ( (kpid = wait(NULL)) != pid ){}	
 		}
 	}
 	ClineFree(cline);
+	if (!cline1) ClineFree(cline1);
 }
 
 
@@ -636,16 +669,14 @@ int main()
 		printf("-->");
 		str = StringFill();
 		
-		line = malloc((1+1)*sizeof(*line));
-		line[0] = CommandLineFromString(str);
-		line[1] = NULL;
-		/*line = CommandLineFromString(str);*/
+		line = CommandLineFromString(str);
 		
-		
-		printf("your line: ");	CommandLinePrint(line[0]);
+		/*
+		printf("your pack of lines:\n");
+		CommandLinePackPrint(line);
 		printf("your status: %i\n",line[0]->status);
 		printf("your stream: %i\n",line[0]->stream);
-
+		*/
 		
 		/*CommandLineStream(line)*/
 
@@ -653,7 +684,11 @@ int main()
 		if (CommandLineEmpty(line[0]) || CommandIllegal(line[0]))
 		{
 			StringFree(str);
-			CommandLineFree(line[0]);	
+			/*
+			CommandLineFree(line[0]);
+			CommandLineFree(line[1]);
+			*/
+			CommandLinePackFree(line);	
 			continue;
 		}
 		
@@ -666,12 +701,13 @@ int main()
 		ClinePrint(cline);
 		*/
 		
-		CommandLineProcessor(line[0]);
 		
+		CommandLineProcessor(line);
+
 		StringFree(str);
-		CommandLineFree(line[0]);
-		free(line);
-		str = NULL; line = NULL;	
+		CommandLinePackFree(line);
+
+		str = NULL; /* line[0] = NULL; */
 	}
 	
 

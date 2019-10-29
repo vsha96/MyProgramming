@@ -1,52 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 struct CommandLine {
 	char *word;
 	struct CommandLine *next;
 };
 
-int RealStringComp(char *s1, char *s2);
+void changei(int *i)
 {
-	int i = 0;
-	while(s1[i] != 0 || s2[i] != 0)
-	{
-		
-	}
-	if ()
-	return 1;
-
-	//or
-	return 0;
+	*i = 9;
 }
 
 int main()
 {
-	/*
-	struct CommandLine *line;
-	line = malloc(sizeof(*line));
-	line->next = NULL;
-	line->string = "123456789000\n";
-	printf("%s\n",line->string);
 	
-	int i = 250;
-	printf("%c\n",i);	
-	*/
-
-	char *p;
-	p = "cd";
+	int i = 1;
+	changei(&i);
+	printf("%i\n",i);
 	
-	if (p == "cd")
-	{
-		printf("FUCK YEAH");
-	}
-	if (RealStringComp(s1,"cd"))
-	{
-		//we must do smt
-	}
-
-
-
-
-
-
+	
+	
+	
 }
