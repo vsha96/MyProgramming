@@ -38,7 +38,7 @@ struct String *StringFill()
 	int c; /*our char with EOF*/
 	str = malloc(sizeof(*str));
 	temp = str;
-	while((c = getchar()) != '\n') /* EOF) */
+	while((c = getchar()) != '\n' && c != EOF) /* EOF) */
 	{
 		if (i == chunk_size)
 		{
@@ -371,22 +371,22 @@ int StringCutCommas(struct CommandLine *line, struct String *str, int *i)
 }
 
 
-int StringCutAmpersand(struct CommandLine *line, struct String *str, int *i)
+int StringCutAmpersand(struct CommandLine **line, struct String *str, int *i)
 {
 	/*CHANGE STATUS and make string without & at the end*/	
 	/*!there is problem when we have spaces after &*/
-	if (CommandLineSize(line) == 0)
+	if (CommandLineSize(line[0]) == 0)
 	{	
-		line = CommandLineChangeStatus(line,-1);
+		line[0] = CommandLineChangeStatus(line[0],-1);
 		return -1;
 	}
 	if (StringSymbolsAfter(str,*i))
 	{
-		line = CommandLineChangeStatus(line,-1);
+		line[0] = CommandLineChangeStatus(line[0],-1);
 		printf("error:: misplaced &\n");
 		return -1;
 	}
-	line = CommandLineChangeStatus(line,1);
+	line[0] = CommandLineChangeStatus(line[0],1);
 	*i += 1;
 	return 0;
 }
@@ -447,7 +447,7 @@ int StringCutStreams(struct CommandLine **line, struct String *str, int *i, int 
 	if (!StringSymbolsAfter(str,*i+1))
 	{
 		line[0] = CommandLineChangeStatus(line[0],-1);
-		printf("error::missing argument after change stream\n");
+		printf("error:: missing argument after change stream\n");
 		return -1;
 	}
 	*i += 1; *j += 1;
@@ -473,7 +473,7 @@ struct CommandLine **CommandLineFromString(struct String *str)
 		if (StringCharAt(str,i) == '"') {
 			if (StringCutCommas(line[j],str,&i)) break;
 		} else if (StringCharAt(str,i) == '&') {
-			if (StringCutAmpersand(line[j],str,&i)) break;
+			if (StringCutAmpersand(line,str,&i)) break;
 		} else if ((c = StringCharAt(str,i)) == '>' || c == '<') {
 			if (StringCutStreams(line,str,&i,&j)) break;
 		} else if (StringCharAt(str,i) != ' ') {
@@ -581,20 +581,55 @@ int CommandIllegal(const struct CommandLine *line)
 void CommandLineStream(const struct CommandLine *line)
 {}
 */
-void CLineExecute(char **cline)
+
+void StreamOpen(int st, int fd, char **cline1)
 {
+	if (st == 1) /* > */
+		fd = open(cline1[0],O_WRONLY|O_CREAT|O_TRUNC,0666);	
+	if (st == 2) /* >> */
+		fd = open(cline1[0],O_WRONLY|O_CREAT|O_APPEND,0666);
+	if (st == 3) /* < */
+		fd = open(cline1[0],O_RDONLY,0666);	
+	if (fd == -1)
+	{
+		perror(cline1[0]);
+		exit(1);
+	}
+	if (st == 3)
+	{
+		dup2(fd,0);
+	} else {	
+		dup2(fd,1);
+	}
+}
+
+void CLineExecute(struct CommandLine **line, char **cline, char **cline1)
+{
+	int st,fd = 0; /*stream, file descriptor*/
+
+	if ((st = line[0]->stream) != 0)
+	{
+		StreamOpen(st, fd, cline1); /*put (&fd) for close(fd) lower*/
+	}
+
 	execvp(cline[0],cline);
 	perror(cline[0]);
 	fflush(stderr);
 	exit(1);
-
+	/*
+	if (st != 0)
+	{
+		close(fd);
+	}
+	*/
 }
+
+
 
 void CommandLineProcessor(struct CommandLine **line)
 { 
 	int r,pid;
 	int kpid; /*killed pid*/
-	int st,fd = 0; /*stream, file descriptor*/
 	char **cline = CommandLineConverter(line[0]);
 	char **cline1 = CommandLineConverter(line[1]);
 	/*printf("your strings [%s] [%s]\n",cline[0],cline1[0]);*/
@@ -607,40 +642,16 @@ void CommandLineProcessor(struct CommandLine **line)
 		{
 			perror(cline[1]);
 		}
-	} else if (CommandBG(line[0])) {
-		/*printf("its bg in processor\n");*/
-		pid = fork();
-		if (pid == 0)
-		{
-			CLineExecute(cline);
-		}	
 	} else {
 		pid = fork();	
 		if (pid == 0)
 		{
-			/*printf("cline[0] = [%s]\n",cline[0]);*/
-			if ((st = line[0]->stream) != 0)
-			{
-				if (st == 1) /* > */
-					fd = open(cline1[0],O_WRONLY|O_CREAT|O_TRUNC,0666);	
-				if (st == 2) /* >> */
-					fd = open(cline1[0],O_WRONLY|O_CREAT|O_APPEND,0666);
-				if (st == 3) /* < */
-					fd = open(cline1[0],O_RDONLY,0666);	
-				if (fd == -1)
-				{
-					perror("list.txt");
-					exit(1);
-				}
-				dup2(fd,1);
-			}
-			CLineExecute(cline);
-			if (st != 0)
-			{
-				close(fd);
-			}
+			CLineExecute(line, cline, cline1);
 		}
-		while ( (kpid = wait(NULL)) != pid ){}	
+		if (!CommandBG(line[0]))
+		{
+			while ( (kpid = wait(NULL)) != pid ){}	
+		}
 	}
 	ClineFree(cline);
 	if (!cline1) ClineFree(cline1);
@@ -693,26 +704,9 @@ int main()
 		
 		CommandLineProcessor(line);
 
-				/*
-				int fd;
-				fd = open("list.txt",O_CREAT|O_WRONLY|O_TRUNC,0666);
-				if (fd == -1)
-				{
-					perror("list.txt");
-					exit(1);
-				}
-				dup2(fd,1);
-				write(fd,"i wrote somthing\n",8);
-				close(fd);
-				*/
-
 		StringFree(str);
-		CommandLinePackFree(line);	
-		/*
-		CommandLineFree(line[0]);
-		CommandLineFree(line[1]);
-		*/
-		/*free(line);*/
+		CommandLinePackFree(line);
+
 		str = NULL; /* line[0] = NULL; */
 	}
 	
