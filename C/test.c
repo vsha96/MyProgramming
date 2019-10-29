@@ -6,19 +6,17 @@ struct CommandLine {
 	struct CommandLine *next;
 };
 
+void changei(int *i)
+{
+	*i = 9;
+}
+
 int main()
 {
 	
-	int c;
-	while((c = getchar()) != EOF || c != '\n')
-	{
-		putchar(c);
-	}
-
-			
-	
-	
-	
+	int i = 1;
+	changei(&i);
+	printf("%i\n",i);
 	
 	
 	
