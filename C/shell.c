@@ -14,11 +14,6 @@ struct CommandLine {
 solution:
 	cline1
 	cline2 (what after separator)
-case:		exe > file
-			exe > exe ? exe > exe > file?
-		only one stream!
-			ls > progname ? is it file name in open??
-		only filename!
 	*/
 	struct CommandLine *next;
 };
@@ -675,24 +670,71 @@ void CommandLineProcessor(struct CommandLine **line)
 		}
 	} else if (CommandConv(line[0])) {
 		/*TODO*/
-		int fd[2];
-		pipe(fd);	
+		int fd[2]; fd[0] = 0; fd[1] = 1;
 		pid = fork();
 		if (pid == 0) 
 		{
-			dup2(1,fd[1]); /*what is wrong?*/ /*test: ls | cat*/
-			execvp(cline1[0],cline1);
-			perror(cline1[0]);
-			fflush(stderr);
-			exit(1);
-		} else {
+			//dup2(fd[1],1); /*added it when I feel madness*/
+			//pipe(fd);
+			/*
+			pid = fork();
+			if (pid == 0)
+			{
+				dup2(fd[0],0);
+				dup2(1,fd[1]);
+				execvp(cline1[0],cline1);
+				perror(cline1[0]);
+				fflush(stderr);
+				exit(1);
+			}
+			
 			close(fd[0]);
+			dup2(fd[1],1);
 			execvp(cline[0],cline);
 			perror(cline[0]);
 			fflush(stderr);
 			exit(1);
+			*/
+			int i = 0;
+			while(line[i])
+			{
+				if (line[i+1])
+				{
+					pipe(fd);
+					pid = fork();
+				}
+				if (pid == 0) /*child*/
+				{
+					dup2(fd[0],0);
+					if (line[i+1] == NULL)
+					{
+						dup2(1,fd[1]);
+					} else {
+						close(fd[1]);
+					}
+				} else { /*parent*/
+					close(fd[0]);
+					dup2(fd[1],1);
+					execvp(cline[0],cline);
+					perror(cline[0]);
+					fflush(stderr);
+					exit(1);
+				}
+				if (line[i+1])
+				{
+					i++;
+					cline = CommandLineConverter(line[i]);
+					pid++; /*it is not natural*/
+				}
+			}
+			
 		}
-
+		
+		if (!CommandBG(line[0]))
+		{
+			/*printf("it is not bg conveyor\n");*/
+			while ( (kpid = wait(NULL)) != pid ){}	
+		}
 		
 		/*
 		execvp(cline[0],cline);
