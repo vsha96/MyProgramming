@@ -668,57 +668,36 @@ void CommandLineProcessor(struct CommandLine **line)
 		}
 	} else if (CommandConv(line[0])) {
 		/*TODO*/
-		int fd[2]; fd[0] = 0; fd[1] = 1;
+		int fd[2];
+		fd[0] = 0; fd[1] = 1; pid = 0;
 		int i = 0;
 		/*we can't collect all pids, need revise this cycle*/
 		int mpid[32], j;
 		for (j=0;j<32;j++) { mpid[j] = 0; }
 
-		pid = fork();
-		if (pid == 0) 
-		{
-			//dup2(fd[1],1); /*added it when I feel madness*/
-			//pipe(fd);
-			/*
-			pid = fork();
-			if (pid == 0)
-			{
-				dup2(fd[0],0);
-				dup2(1,fd[1]);
-				execvp(cline1[0],cline1);
-				perror(cline1[0]);
-				fflush(stderr);
-				exit(1);
-			}
+		int pid1 = fork();
+		if (pid1 == 0) { /*!!!!!!!!!!*/
 			
-			close(fd[0]);
-			dup2(fd[1],1);
-			execvp(cline[0],cline);
-			perror(cline[0]);
-			fflush(stderr);
-			exit(1);
-			*/
-
 			while(line[i])
 			{
-				if (line[i+1])
-				{
-					pipe(fd);
-					pid = fork();
+				cline = CommandLineConverter(line[i]);
 
-					mpid[i] = pid;
-				}
-				if (pid == 0 && line[i+1]) /*child*/
+				//dup2(fd[0],0); /*at begining fd[0]=0*/
+				if (i != 0)
 				{
 					dup2(fd[0],0);
-					//if (line[i+1] == NULL)
-					//{
-					//	dup2(1,fd[1]);
-					//} else {
-						close(fd[1]);
-					//}
-				} else { /*parent*/
-					close(fd[0]);
+					close(fd[1]);
+				}
+				
+				if (line[i+1]) 
+					pipe(fd);
+				
+				
+				pid = fork();
+				mpid[i] = pid;
+				if (pid == 0)
+				{
+					//close(fd[0]);
 					dup2(fd[1],1);
 					execvp(cline[0],cline);
 					perror(cline[0]);
@@ -726,38 +705,48 @@ void CommandLineProcessor(struct CommandLine **line)
 					exit(1);
 				}
 				i++;
-				cline = CommandLineConverter(line[i]);
 			}
 			
-		}
-		
-		/*
-		for (j=0;j<8;j++)
-		{
-			printf("[%i]\n",mpid[j]);
-		} printf("===\n");
-		*/
-		
+			
+			/*
+			for (j=0;j<4;j++)
+			{
+				printf("[%i]\n",mpid[j]);
+			} printf("===\n");
+			*/
+			
+			if (!CommandBG(line[0]))
+			{
+				while((kpid = wait(NULL)))
+				{
+					int check = 0;
+					for (j=0;j<i+1;j++) /*we launched (i) processes*/
+					{
+						check += mpid[j];
+						if (kpid == mpid[j])
+						{
+							mpid[j] = 0; break;
+						}
+					}	
+					if (check == 0) break;
+					check = 0;
+				}
+			}
+			
+			char **p;
+			p = malloc(2*sizeof(*p));
+			p[0] = "./empty"; p[1] = NULL;
+			execvp(p[0],p);
+			perror(p[0]);
+			fflush(stderr);
+			exit(1);
+		} /*!!!!!!!!*/
 		if (!CommandBG(line[0]))
 		{
-			while((kpid = wait(NULL)))
-			{
-				int check = 0;
-				for (j=0;j<i+1;j++) /*we launched (i) processes*/
-				{
-					check += mpid[j];
-					if (kpid == mpid[j])
-					{
-						mpid[j] = 0; break;
-					}
-				}	
-				if (check == 0) break;
-				check = 0;
-			}
+			while ( (kpid = wait(NULL)) != pid1 ){}	
 		}
-		
 		/*
-		for (j=0;j<8;j++)
+		for (j=0;j<4;j++)
 		{
 			printf("[%i]\n",mpid[j]);
 		} printf("===\n");

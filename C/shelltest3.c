@@ -438,6 +438,14 @@ int StringCutStreams
 { /*I consider that I won't have incorrect string*/
 	int size = StringSize(str);
 	int c;
+	
+	int st;
+	if ((st=line[0]->stream) != 0 && st != 4)
+	{
+		printf("error::trying to change stream several times\n");
+		return -1;
+	}
+	
 	if ((c = StringCharAt(str,*i)) == '>' && (*i < size) && StringCharAt(str,*i+1) == '>')
 	{
 		line[0] = CommandLineChangeStream(line[0],2);
@@ -629,11 +637,21 @@ void ConvOpen(int fd[2])
 	/*TODO*/
 }
 
+void CExe(struct CommandLine *line)
+{
+	char **cline;
+	cline = CommandLineConverter(line);
+	execvp(cline[0],cline);
+	perror(cline[0]);
+	fflush(stderr);
+	exit(1);
+}
+
 void CLineExecute(struct CommandLine **line, char **cline, char **cline1)
 {
 	int st,fd = 0; /*stream, file descriptor*/
 
-	if ((st = line[0]->stream) != 0)
+	if ((st = line[0]->stream) != 0 && st != 4 /*added 05.11*/)
 	{
 		StreamOpen(st, fd, cline1); /*put (&fd) for close(fd) lower*/
 	}
@@ -668,75 +686,39 @@ void CommandLineProcessor(struct CommandLine **line)
 		}
 	} else if (CommandConv(line[0])) {
 		/*TODO*/
-		int fd[2]; fd[0] = 0; fd[1] = 1;
+		int fd[2];
+		fd[0] = 0; fd[1] = 1; pid = 0;
 		int i = 0;
 		/*we can't collect all pids, need revise this cycle*/
-		int mpid[32], j;
+		pid = 0;
+		int pid1 = 0;
+		int mpid[32] /*TODO CommandLineSize and wath itteration after this */, j;
 		for (j=0;j<32;j++) { mpid[j] = 0; }
+		
+		
+		
+		cline = CommandLineConverter(line[0]);
+		cline1 = CommandLineConverter(line[1]);
 
-		pid = fork();
-		if (pid == 0) 
+		pipe(fd);
+		pid = fork(); mpid[0] = pid;
+		pid1 = fork(); mpid[1] = pid1;
+		
+		if (pid == 0)
 		{
-			//dup2(fd[1],1); /*added it when I feel madness*/
-			//pipe(fd);
-			/*
-			pid = fork();
-			if (pid == 0)
-			{
-				dup2(fd[0],0);
-				dup2(1,fd[1]);
-				execvp(cline1[0],cline1);
-				perror(cline1[0]);
-				fflush(stderr);
-				exit(1);
-			}
-			
 			close(fd[0]);
 			dup2(fd[1],1);
-			execvp(cline[0],cline);
-			perror(cline[0]);
-			fflush(stderr);
-			exit(1);
-			*/
-
-			while(line[i])
-			{
-				if (line[i+1])
-				{
-					pipe(fd);
-					pid = fork();
-
-					mpid[i] = pid;
-				}
-				if (pid == 0 && line[i+1]) /*child*/
-				{
-					dup2(fd[0],0);
-					//if (line[i+1] == NULL)
-					//{
-					//	dup2(1,fd[1]);
-					//} else {
-						close(fd[1]);
-					//}
-				} else { /*parent*/
-					close(fd[0]);
-					dup2(fd[1],1);
-					execvp(cline[0],cline);
-					perror(cline[0]);
-					fflush(stderr);
-					exit(1);
-				}
-				i++;
-				cline = CommandLineConverter(line[i]);
-			}
-			
+			CExe(line[0]);
 		}
-		
-		/*
-		for (j=0;j<8;j++)
+		if (pid1 == 0)
 		{
-			printf("[%i]\n",mpid[j]);
-		} printf("===\n");
-		*/
+			dup2(fd[0],0);
+			close(fd[1]);
+			CExe(line[1]);
+		}
+		close(fd[0]); close(fd[1]);
+		
+		
 		
 		if (!CommandBG(line[0]))
 		{
@@ -757,7 +739,7 @@ void CommandLineProcessor(struct CommandLine **line)
 		}
 		
 		/*
-		for (j=0;j<8;j++)
+		for (j=0;j<4;j++)
 		{
 			printf("[%i]\n",mpid[j]);
 		} printf("===\n");
