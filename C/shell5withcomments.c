@@ -51,6 +51,7 @@ struct String *StringFill()
 		temp->x[i]=c;
 		i++;
 	}
+	/*if (c == EOF)*/
 	if (i != chunk_size)
 	{
 		temp->x[i]=EOF;
@@ -143,6 +144,9 @@ struct String *StringMakeNewFrom(struct String *str,int s1,int s2)
 		newtemp->x[(l%chunk_size)]=EOF;
 	}
 	newtemp->next=NULL;	
+	/* is this free memory? */
+	newtemp = NULL;
+
 	return newstr;
 }
 
@@ -175,7 +179,7 @@ int StringSymbolsAfter(const struct String *str, int i)
 }
 
 char *StringMakeRealStringFrom(struct String *str, int s1, int s2)
-{
+{ /*we add it to dont overwrite all of this*/
 	struct String *temp;	
 	char *p;
 	temp = StringMakeNewFrom(str,s1,s2);
@@ -187,8 +191,10 @@ char *StringMakeRealStringFrom(struct String *str, int s1, int s2)
 
 	}
 	p[i-1] = 0;
-	/* free memory */
+	/* is this free memory? */
 	StringFree(temp);
+	temp = NULL;
+	
 	return p;
 }
 
@@ -282,7 +288,9 @@ int CommandLineEmpty(const struct CommandLine *line)
 }
 
 struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *str, int s1, int s2)
-{
+{ /*we can use recursion, it will be more compact code here with it*/
+/* or **line , it is also will be more compact */
+/* maybe one day I'll rewrite it */
 	struct CommandLine *linetemp, *lineprev;
 	int first = 1;
 	linetemp = line;
@@ -294,19 +302,27 @@ struct CommandLine *CommandLineAddWord(struct CommandLine *line, struct String *
 			linetemp = linetemp->next;
 			first = 0;
 		}
-		if (first)
+		if (first && (str != NULL))
 		{
 			linetemp = malloc(sizeof(*line));
+			linetemp->word = StringMakeRealStringFrom(str,s1,s2);
+			linetemp->status = 0; /*added 27.10*/
+			linetemp->stream = 0; /*added 27.10*/
+			linetemp->next = NULL;
 			line = linetemp;
-		} else {
+		} else if (str != NULL){
 			lineprev->next = malloc(sizeof(*line));
 			linetemp = lineprev->next;
+			linetemp->word = StringMakeRealStringFrom(str,s1,s2);
+			linetemp->status = 0; /*added 12.11*/
+			linetemp->stream = 0; /*added 12.11*/
+			linetemp->next = NULL;
 		}
-		linetemp->word = StringMakeRealStringFrom(str,s1,s2);
-		linetemp->status = 0;
-		linetemp->stream = 0;
-		linetemp->next = NULL;
 	}	
+	/* is this free memory? */
+	linetemp = NULL;
+	lineprev = NULL;
+	
 	return line;
 }
 
@@ -400,6 +416,9 @@ int StringCutWords(struct CommandLine *line, struct String *str, int *i)
 		*i += 1;
 	}
 	s2 = *i - 1;
+/*
+	if (StringCharAt(str,s2) == '\n') { s2 = s2 - 1; }
+*/
 	/*printf("%i %i\n",s1,s2);*/
 	line = CommandLineAddWord(line,str,s1,s2);
 	return 0;
@@ -422,8 +441,6 @@ struct CommandLine **CommandLinePackFromCount
 (struct CommandLine **line, int count)
 {
 	int i;
-	/*there are another +1 cause example: cat | cat*/
-	/*there are 1 change stream, but two commands*/
 	line = malloc((count+1+1)*sizeof(*line));
 	for (i=0;i<count+1+1;i++)
 	{
@@ -456,6 +473,8 @@ int StringCutStreams
 	} else if (c == '<') {
 		line[*j] = CommandLineChangeStream(line[*j],3);
 	} else if (c == '|') {
+		/*I really dont like that we initialize stream several times*/
+		/*maybe one day I will write some errors alerts*/
 		line[*j] = CommandLineChangeStream(line[*j],4);
 	} else {
 		line[*j] = CommandLineChangeStream(line[*j],1);
@@ -500,6 +519,9 @@ struct CommandLine **CommandLineFromString(struct String *str)
 				i += 1;
 			}
 			s2 = i - 1;
+		/*
+			if (StringCharAt(str,s2) == '\n') { s2 = s2 - 1; }
+		*/
 			line[j] = CommandLineAddWord(line[j],str,s1,s2);
 		} else {
 			i += 1;
@@ -507,6 +529,7 @@ struct CommandLine **CommandLineFromString(struct String *str)
 		/*printf("I SEE CHAR = (%c)\n",StringCharAt(str,i));*/
 	}
 	if (size == 0) line[0] = CommandLineChangeStatus(line[0],0);
+
 	return line;
 }
 
@@ -536,6 +559,13 @@ void ClinePrint(char * const *cline)
 
 void ClineFree(char ** cline)
 {
+	/*
+	int i=0;
+	while(cline != NULL)
+	{
+		free(cline[i]); i++;
+	}
+	*/
 	free(cline);
 }
 
@@ -597,6 +627,7 @@ int CommandIllegal(const struct CommandLine *line)
 	}
 }
 
+/*ADDED 12.11.19*/
 int ConvCount(struct CommandLine **line)
 {
 	int i = 0;
@@ -636,6 +667,7 @@ void CExe(struct CommandLine *line)
 {
 	char **cline;
 	cline = CommandLineConverter(line);
+	/*write(1,cline[0],sizeof(cline[0]));*/
 	execvp(cline[0],cline);
 	perror(cline[0]);
 	fflush(stderr);
@@ -646,11 +678,11 @@ void CLineExecute(struct CommandLine **line, int *j)
 {
 	int st; /*stream, file descriptor*/
 	char **cline = CommandLineConverter(line[*j]);
-	if ((st = line[*j]->stream) != 0 && st != 4)
+	if ((st = line[*j]->stream) != 0 && st != 4 /*added 12.11*/)
 	{
 		char **cline1 = CommandLineConverter(line[*j+1]);
 		*j += 1;
-		StreamOpen(st, cline1);
+		StreamOpen(st, cline1); /*put (&fd) for close(fd) lower*/
 		execvp(cline[0],cline);
 		perror(cline[0]);
 		fflush(stderr);
