@@ -1,0 +1,5 @@
+{
+  "url": "https://fintechbot01.university.innopolis.ru/bot/bot.py"
+}
+
+//curl -X POST -d @data.json -H "Content-Type: application/json" "https://api.telegram.org/358566966:AAEIAY_9VCUGPGjrSQZ2a5n6IR7h20WeAuI/setWebhook"
