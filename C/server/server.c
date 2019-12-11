@@ -48,7 +48,7 @@ void session_send_string(struct session *sess, const char *str)
 void session_send_int(struct session *sess, const int n)
 {
 	char send[256];
-	sprintf(send, "%i", global_count);
+	sprintf(send, "%i", n);
 	session_send_string(sess, send);
 	session_send_string(sess, "\n");
 }
