@@ -35,6 +35,7 @@ struct session { /*equals player in bank*/
 	enum fsm_states state;
 	/*after end turn, we look in the bank: all players have done turn?*/
 	/*for game: information about resources*/
+	// ? int status;
 	int number; /*number of player*/ /*depends on count of players*/
 	int money; /* 10000 */ /*start count*/
 	int material; /* 4 */
@@ -93,16 +94,15 @@ void player_send_info(int sd)
 {
 	struct session *player;
 	player = bank->player[sd];
-	player_send_string(player,"Number:     \t");
+	player_send_string(player,"* Number:     \t");
 	player_send_int(player, player->number);
-	printf("\tmoney %i\n", player->money);
-	player_send_string(player,"Money:      \t");
+	player_send_string(player,"* Money:      \t");
 	player_send_int(player, player->money);
-	player_send_string(player,"Material:   \t");
+	player_send_string(player,"* Material:   \t");
 	player_send_int(player, player->material);
-	player_send_string(player,"Product:    \t");
+	player_send_string(player,"* Product:    \t");
 	player_send_int(player, player->product);
-	player_send_string(player,"Factory:    \t");
+	player_send_string(player,"* Factory:    \t");
 	player_send_int(player, player->factory);
 }
 
@@ -115,22 +115,69 @@ struct session *session_make_new(int fd, struct sockaddr_in *from)
 	sess->buf_used = 0;
 	sess->state = fsm_start;
 
-	session_send_string(sess, "Welcome to the game server\n");
-	session_send_string(sess, "Type 'myinfo' for your statistic\n");
+	session_send_string(sess, "* Welcome to the game server\n");
+	session_send_string(sess, "* Type 'myinfo' for your statistic\n");
 	/*for game: setup information about resources*/
 		/*SOLVED in accept_client*/
 	return sess;
 }
 
+/*=====support for handle=====*/
+int word_count(char *line)
+{
+	int size = 0;
+	char *temp = NULL, *word, *sep = " ";
+	strcpy(temp, line);
+	for(word=strtok(temp,sep);
+		word;
+		word=strtok(NULL,sep))
+		size++;
+	return size;
+}
+
+void packline_print(char **packline)
+{
+	char **temp = packline;
+	while(temp[0]) {
+		printf("[%s]\n", temp[0]);
+		temp++;
+	}
+}
+/*=====end support for handle=====*/
+
+char **session_handle_packline(const char *line)
+{
+	char **packline;
+	char *temp = NULL, *word, *sep = " ";
+	int i, size;
+	strcpy(temp, line);
+	size = word_count(temp);
+	packline = malloc((size+1)*sizeof(char*));
+	packline[size] = NULL;
+	temp = line;
+	for (i=0;i<size;i++)
+	{
+		word = strtok(temp, sep);
+		packline[i] = word;
+	}
+	/* DEBUG */ packline_print(packline);
+	return packline;
+}
+
 void session_handle_command(struct session *sess, const char *line)
 {
+	char **packline;
+	/* DEBUG */ printf("PLAYER %i\n", sess->number);
 	/* DEBUG */ printf("handle_command: [%s]\n", line);
+	packline = session_handle_packline(line);
+	/*
 	if (!strcmp("myinfo", line)) {
 		player_send_info(sess->fd);
 	} else {
-		session_send_string(sess, "Wrong command!\n");
-		session_send_string(sess, "Type 'help' for commands\n");
+		session_send_string(sess, "* Wrong command!\n");
+		session_send_string(sess, "* Type 'help' for commands\n");
 	}
+	*/
 	/* smt for change resources*/
 }
 
@@ -176,7 +223,7 @@ void session_check_lf(struct session *sess)
 	memmove(sess->buf, sess->buf+pos, pos+1);
 	sess->buf_used -= (pos+1);
 
-	if (line[pos-1] == '\r') /* what is it? */
+	if (line[pos-1] == '\r')
 		line[pos-1] = 0;
 
 	/*DEBUG*/ //printf("check_lf: [%s]\n", line);
@@ -231,7 +278,7 @@ void bank_audit()
 	printf("player_count:\t%i\n",bank->player_count);
 	for (i=0;i < SESS_ARR_SIZE;i++) {
 		if (bank->player[i])
-			printf("\tplayer %i\n",i);
+			printf("\tplayer %i [%i]\n",i,bank->player[i]->number);
 		else
 			printf("\tplayer NULL\n");
 	}
