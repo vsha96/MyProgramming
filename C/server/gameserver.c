@@ -19,6 +19,9 @@ int error_handler()
 
 int global_count = 0;
 
+char msg_intro[] =	"* Welcome to the game server\n* Type 'myinfo' for your statistic\n";
+char msg_warn[] = 	"* Wrong command!\n* Type 'help' for commands\n";
+
 enum fsm_states {
 	fsm_start,
 	fsm_command = fsm_start,
@@ -35,7 +38,7 @@ struct session { /*equals player in bank*/
 	enum fsm_states state;
 	/*after end turn, we look in the bank: all players have done turn?*/
 	/*for game: information about resources*/
-	// ? int status;
+	/* ? int status; */
 	int number; /*number of player*/ /*depends on count of players*/
 	int money; /* 10000 */ /*start count*/
 	int material; /* 4 */
@@ -90,20 +93,33 @@ void player_setup(int sd)
 	bank->player[sd]->factory = 2;
 }
 
-void player_send_info(int sd)
+void player_send_info_about(int to_sd, int tag)
 {
-	struct session *player;
-	player = bank->player[sd];
+	struct session *player, *target = NULL;
+	int i = 0;
+	for (i=0;i<SESS_ARR_SIZE;i++)
+	{
+		if (bank->player[i] && bank->player[i]->number == tag) {
+			target = bank->player[i];
+			break;
+		}
+	}
+	player = bank->player[to_sd];
+	if (target) {
 	player_send_string(player,"* Number:     \t");
-	player_send_int(player, player->number);
+	player_send_int(player, target->number);
 	player_send_string(player,"* Money:      \t");
-	player_send_int(player, player->money);
+	player_send_int(player, target->money);
 	player_send_string(player,"* Material:   \t");
-	player_send_int(player, player->material);
+	player_send_int(player, target->material);
 	player_send_string(player,"* Product:    \t");
-	player_send_int(player, player->product);
+	player_send_int(player, target->product);
 	player_send_string(player,"* Factory:    \t");
-	player_send_int(player, player->factory);
+	player_send_int(player, target->factory);
+	} else {	
+		player_send_string(player,"* No player ");
+		player_send_int(player, tag);
+	}
 }
 
 struct session *session_make_new(int fd, struct sockaddr_in *from)
@@ -115,8 +131,7 @@ struct session *session_make_new(int fd, struct sockaddr_in *from)
 	sess->buf_used = 0;
 	sess->state = fsm_start;
 
-	session_send_string(sess, "* Welcome to the game server\n");
-	session_send_string(sess, "* Type 'myinfo' for your statistic\n");
+	session_send_string(sess, msg_intro); 
 	/*for game: setup information about resources*/
 		/*SOLVED in accept_client*/
 	return sess;
@@ -191,15 +206,23 @@ void session_handle_command(struct session *sess, const char *line)
 	if (size == 1)
 	{
 		if (!strcmp("myinfo", cmd[0])) {
-			player_send_info(sess->fd);
+			player_send_info_about(sess->fd, sess->number);
 		}
 	} else if (size == 2) {
-		if(!strcmp()) {
-
+		if(!strcmp("player", cmd[0])) {
+			char *endptr;
+			int number = strtol(cmd[1], &endptr, 10);
+			if (*endptr) {	
+				session_send_string(sess, msg_warn);
+			} else {
+				player_send_info_about(sess->fd, number);
+			}
+		} else {
+			session_send_string(sess, msg_warn);
 		}
 	} else {
-		session_send_string(sess, "* Wrong command!\n");
-		session_send_string(sess, "* Type 'help' for commands\n");
+		if (*cmd)
+			session_send_string(sess, msg_warn);
 	}
 	
 	/* smt for change resources*/
@@ -300,7 +323,7 @@ void bank_audit()
 	printf("***BANK AUDIT***\n");
 	printf("*max players:\t%i\n",bank->player_max_count);
 	printf("*player_count:\t%i\n",bank->player_count);
-	for (i=4;i < SESS_ARR_SIZE;i++) {
+	for (i=0;i < SESS_ARR_SIZE;i++) {
 		if (bank->player[i])
 			printf("*\tplayer %i [%i]\n",i,bank->player[i]->number);
 		else
