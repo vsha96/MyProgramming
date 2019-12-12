@@ -126,11 +126,11 @@ struct session *session_make_new(int fd, struct sockaddr_in *from)
 int word_count(char *line)
 {
 	int size = 0;
-	char *temp = NULL, *word, *sep = " ";
+	char temp[INBUFSIZE], *word, *sep = " ";
 	strcpy(temp, line);
-	for(word=strtok(temp,sep);
+	for(word = strtok(temp, sep);
 		word;
-		word=strtok(NULL,sep))
+		word = strtok(NULL, sep))
 		size++;
 	return size;
 }
@@ -138,46 +138,70 @@ int word_count(char *line)
 void packline_print(char **packline)
 {
 	char **temp = packline;
+	printf("packline_print:");
 	while(temp[0]) {
-		printf("[%s]\n", temp[0]);
+		printf("[%s]", temp[0]);
 		temp++;
 	}
+	printf("\n");
 }
-/*=====end support for handle=====*/
+
+int packline_size(char **packline)
+{
+	char **temp = packline;
+	int size = 0;
+	while(temp[0]) {
+		size++;
+		temp++;
+	}
+	return size;
+}
 
 char **session_handle_packline(const char *line)
 {
 	char **packline;
-	char *temp = NULL, *word, *sep = " ";
-	int i, size;
-	strcpy(temp, line);
-	size = word_count(temp);
-	packline = malloc((size+1)*sizeof(char*));
-	packline[size] = NULL;
-	temp = line;
-	for (i=0;i<size;i++)
-	{
-		word = strtok(temp, sep);
-		packline[i] = word;
-	}
-	/* DEBUG */ packline_print(packline);
-	return packline;
+    char temp[INBUFSIZE], *word, *sep = " ";
+    int i = 0, size;
+    size = word_count((char*)line);
+    packline = malloc((size+1)*sizeof(char*));
+    packline[size] = NULL;
+
+    strcpy(temp, line);
+    for (word = strtok(temp, sep);
+        word;
+        word = strtok(NULL, sep))
+     {
+         packline[i] = word;
+         i++;
+     }
+    /* DEBUG */ packline_print(packline);
+    return packline;
 }
+/*=====end support for handle=====*/
 
 void session_handle_command(struct session *sess, const char *line)
 {
-	char **packline;
-	/* DEBUG */ printf("PLAYER %i\n", sess->number);
+	char **cmd;
+	int size;
+	/* DEBUG */ printf("PLAYER[%i]: ", sess->number);
 	/* DEBUG */ printf("handle_command: [%s]\n", line);
-	packline = session_handle_packline(line);
-	/*
-	if (!strcmp("myinfo", line)) {
-		player_send_info(sess->fd);
+	cmd = session_handle_packline(line);
+	size = packline_size(cmd);
+	
+	if (size == 1)
+	{
+		if (!strcmp("myinfo", cmd[0])) {
+			player_send_info(sess->fd);
+		}
+	} else if (size == 2) {
+		if(!strcmp()) {
+
+		}
 	} else {
 		session_send_string(sess, "* Wrong command!\n");
 		session_send_string(sess, "* Type 'help' for commands\n");
 	}
-	*/
+	
 	/* smt for change resources*/
 }
 
@@ -274,15 +298,14 @@ void bank_audit()
 {
 	int i;
 	printf("***BANK AUDIT***\n");
-	printf("max players:\t%i\n",bank->player_max_count);
-	printf("player_count:\t%i\n",bank->player_count);
-	for (i=0;i < SESS_ARR_SIZE;i++) {
+	printf("*max players:\t%i\n",bank->player_max_count);
+	printf("*player_count:\t%i\n",bank->player_count);
+	for (i=4;i < SESS_ARR_SIZE;i++) {
 		if (bank->player[i])
-			printf("\tplayer %i [%i]\n",i,bank->player[i]->number);
+			printf("*\tplayer %i [%i]\n",i,bank->player[i]->number);
 		else
-			printf("\tplayer NULL\n");
+			printf("*\tplayer NULL\n");
 	}
-	printf("\n");
 }
 
 void bank_setup(struct server_stat *serv, int max_player)
@@ -332,7 +355,7 @@ void server_accept_client(struct server_stat *serv)
 		printf("warning: count of ready to connect > SESS_ARR_SIZE");
 		return;
 	}
-	/* DEBUG */ printf("new connection %i\n", sd);
+	/* DEBUG */ printf("SERVER: accept_client: %i\n", sd);
 	if (sd == -1)
 	{
 		perror("accept");
@@ -345,7 +368,7 @@ void server_accept_client(struct server_stat *serv)
 
 void server_session_close(struct server_stat *serv, int sd)
 {
-	/* DEBUG */ printf("close connection %i\n", sd);
+	/* DEBUG */ printf("SERVER: session_close: %i\n", sd);
 	close(sd);
 	serv->sess_array[sd]->fd = -1;
 	session_cleanup(serv->sess_array[sd]);
@@ -388,7 +411,7 @@ int server_run(struct server_stat *serv)
 			int old_global_count = global_count, j; /* for news */
 			if (serv->sess_array[i] && FD_ISSET(i, &readfds))
 			{
-				printf("try to read from sess %i\n", i);
+				printf("SERVER: call: session_read: %i\n", i);
 				ssr = session_read(serv->sess_array[i]);
 				if (old_global_count != global_count) /* for news */
 					j = i;
