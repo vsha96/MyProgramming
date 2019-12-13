@@ -24,7 +24,9 @@ char msg_warn[] = 	"* Unknown command! Type 'help' for commands\n";
 
 enum fsm_states {
 	fsm_start,
-	fsm_command = fsm_start,
+	fsm_wait_connection = fsm_start,
+	fsm_command,
+	fsm_end_turn,
 	fsm_finish,
 	fsm_error
 };
@@ -56,6 +58,9 @@ struct bank_stat {
 struct bank_stat *bank;
 
 void bank_audit();
+void bank_check_count_player();
+void bank_check_end_turn();
+
 
 /*procedure*/
 /*for game: send to all players news (what have just changed)*/
@@ -209,7 +214,7 @@ char **session_handle_packline(const char *line)
          packline[i] = word;
          i++;
      }
-    /* DEBUG */ packline_print(packline);
+    /* DEBUG */ //packline_print(packline);
     return packline;
 }
 /*=====end support for handle=====*/
@@ -224,7 +229,8 @@ int handler_command_1(struct session *player, char **cmd)
 		/*TODO*/
 	} else if (!strcmp("turn", cmd[0])) {
 		player_send_string(player, "* cmd: turn\n");
-		/*TODO*/
+		/* DEBUG */ printf("PLAYER[%i]: end_turn\n", player->number);
+		player->state = fsm_end_turn;
 		player_send_string(player, "* you end turn\n");
 	} else if (!strcmp("help", cmd[0])) {
 		player_send_help(player);
@@ -289,8 +295,8 @@ void session_handle_command(struct session *sess, const char *line)
 {
 	char **cmd;
 	int size;
-	/* DEBUG */ printf("PLAYER[%i]:", sess->number);
-	/* DEBUG */ printf(" handle_command: \n\t");
+	/* DEBUG */ //printf("PLAYER[%i]:", sess->number);
+	/* DEBUG */ //printf(" handle_command: \n\t");
 	cmd = session_handle_packline(line);
 	size = packline_size(cmd);
 	
@@ -312,14 +318,17 @@ void session_fsm_step(struct session *sess, char *line)
 {
 	switch(sess->state)
 	{
+		case fsm_wait_connection:
+			break;
 		case fsm_command:
 			session_handle_command(sess, line);
+			bank_audit();
+			bank_check_end_turn();
 			free(line);
 			break;
-		/* for game:
-		case: fsm_end_turn? 
-			...
-		*/ 
+		/* for game: */
+		case fsm_end_turn:
+			break;
 		/* somewhere must be procedure for check 'are all users end?'
 		void server_end_turn(clients fds) */
 		case fsm_finish:
@@ -397,17 +406,59 @@ struct server_stat {
 	int sess_array_size;
 };
 
+/*==========BANK ACTIONS==========*/
 void bank_audit()
 {
 	int i;
 	printf("***BANK AUDIT***\n");
 	printf("*max players:\t%i\n",bank->player_max_count);
 	printf("*player_count:\t%i\n",bank->player_count);
-	for (i=4;i < SESS_ARR_SIZE;i++) {
-		if (bank->player[i])
-			printf("*\tplayer %i [%i]\n",i,bank->player[i]->number);
-		else
+	for (i=4;i < 4 + bank->player_max_count;i++) {
+		if (bank->player[i]) {
+			printf("*\tplayer %i [%i] ",i,bank->player[i]->number);
+			if (bank->player[i]->state == fsm_wait_connection) {
+				printf("waiting\n");
+			} else if (bank->player[i]->state == fsm_command) {
+				printf("active\n");
+			} else if (bank->player[i]->state == fsm_end_turn) {
+				printf("end turn\n");
+			}
+		} else {
 			printf("*\tplayer NULL\n");
+		}
+	}
+}
+
+void bank_check_count_player()
+{
+	int i;
+	if (bank->player_count == bank->player_max_count) {
+		for (i=0;i < SESS_ARR_SIZE;i++) {
+			if	(bank->player[i]) {
+				bank->player[i]->state = fsm_command;
+			}
+		}
+		/* DEBUG */ printf("=====GAME START=====\n");
+	}
+}
+
+void bank_check_end_turn()
+{
+	int i;
+	for (i=0;i < SESS_ARR_SIZE;i++) {
+		if	(bank->player[i] &&
+			bank->player[i]->state != fsm_end_turn &&
+			bank->player[i]->state != fsm_finish) {
+			printf("BANK: there are active players\n");
+			break;
+		}
+	}
+	if (i == SESS_ARR_SIZE) {
+		printf("BANK: there are NO active players\n");
+		/*TODO*/
+		/*handle requests for auction*/
+		/*handle requests for buildings*/
+		/*refresh players inf*/
 	}
 }
 
@@ -419,6 +470,7 @@ void bank_setup(struct server_stat *serv, int max_player)
 	bank->player_count = 0;
 	bank_audit();
 }
+/*==========END OF BANK ACTIONS==========*/
 
 int server_setup(struct server_stat *serv, int port, int max_player)
 {
@@ -466,6 +518,7 @@ void server_accept_client(struct server_stat *serv)
 	}
 	serv->sess_array[sd] = session_make_new(sd, &addr);
 	player_setup(sd);
+	bank_check_count_player();
 	bank_audit();
 }
 
