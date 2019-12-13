@@ -19,8 +19,8 @@ int error_handler()
 
 int global_count = 0;
 
-char msg_intro[] =	"* Welcome to the game server\n* Type 'myinfo' for your statistic\n";
-char msg_warn[] = 	"* Wrong command!\n* Type 'help' for commands\n";
+char msg_intro[] =	"* Welcome to the game server\n* Type 'help' for command list\n";
+char msg_warn[] = 	"* Unknown command! Type 'help' for commands\n";
 
 enum fsm_states {
 	fsm_start,
@@ -44,6 +44,7 @@ struct session { /*equals player in bank*/
 	int material; /* 4 */
 	int product; /* 2 */
 	int factory; /* 2 */
+	/*refreshable inf: max count of prod*/
 };
 
 struct bank_stat {
@@ -93,33 +94,52 @@ void player_setup(int sd)
 	bank->player[sd]->factory = 2;
 }
 
-void player_send_info_about(int to_sd, int tag)
+void player_send_info_about(struct session *sess, int tag)
 {
 	struct session *player, *target = NULL;
 	int i = 0;
-	for (i=0;i<SESS_ARR_SIZE;i++)
-	{
+	for (i=0;i<SESS_ARR_SIZE;i++) {
 		if (bank->player[i] && bank->player[i]->number == tag) {
 			target = bank->player[i];
 			break;
 		}
 	}
-	player = bank->player[to_sd];
+	player = sess;
 	if (target) {
-	player_send_string(player,"* Number:     \t");
-	player_send_int(player, target->number);
-	player_send_string(player,"* Money:      \t");
-	player_send_int(player, target->money);
-	player_send_string(player,"* Material:   \t");
-	player_send_int(player, target->material);
-	player_send_string(player,"* Product:    \t");
-	player_send_int(player, target->product);
-	player_send_string(player,"* Factory:    \t");
-	player_send_int(player, target->factory);
+		player_send_string(player,"* Number:     \t");
+		player_send_int(player, target->number);
+		player_send_string(player,"* Money:      \t");
+		player_send_int(player, target->money);
+		player_send_string(player,"* Material:   \t");
+		player_send_int(player, target->material);
+		player_send_string(player,"* Product:    \t");
+		player_send_int(player, target->product);
+		player_send_string(player,"* Factory:    \t");
+		player_send_int(player, target->factory);
 	} else {	
 		player_send_string(player,"* No player ");
 		player_send_int(player, tag);
 	}
+}
+
+void player_send_help(struct session *player)
+{
+	player_send_string(player,"* myinfo\n");
+	player_send_string(player,"\t- just your info\n");
+	player_send_string(player,"* player <number>\n");
+	player_send_string(player,"\t- receive inf about player\n");
+	player_send_string(player,"* turn\n");
+	player_send_string(player,"\t- end your turn\n");
+	player_send_string(player,"* market\n");
+	player_send_string(player,"\t- receive inf about market state\n");
+	player_send_string(player,"* build <count>\n");
+	player_send_string(player,"\t- request factories\n");
+	player_send_string(player,"* prod <count>\n");
+	player_send_string(player,"\t- make production\n");
+	player_send_string(player,"* buy <count> <price>\n");
+	player_send_string(player,"\t- buy material\n");
+	player_send_string(player,"* sell <count> <price>\n");
+	player_send_string(player,"\t- sell production\n");
 }
 
 struct session *session_make_new(int fd, struct sockaddr_in *from)
@@ -194,32 +214,92 @@ char **session_handle_packline(const char *line)
 }
 /*=====end support for handle=====*/
 
+/*=====COMMAND HANDLERS=====*/
+int handler_command_1(struct session *player, char **cmd)
+{
+	if (!strcmp("myinfo", cmd[0])) {
+		player_send_info_about(player, player->number);
+	} else if (!strcmp("market", cmd[0])) {
+		player_send_string(player, "* cmd: market\n");
+		/*TODO*/
+	} else if (!strcmp("turn", cmd[0])) {
+		player_send_string(player, "* cmd: turn\n");
+		/*TODO*/
+		player_send_string(player, "* you end turn\n");
+	} else if (!strcmp("help", cmd[0])) {
+		player_send_help(player);
+	} else {
+		player_send_string(player, msg_warn);
+		return 0;
+	}
+	return 1;
+}
+
+int handler_command_2(struct session *player, char **cmd)
+{
+	char *endptr;
+	int number = strtol(cmd[1], &endptr, 10);
+	if (*endptr) {
+		session_send_string(player, msg_warn);
+		return 0;
+	}
+
+	if (!strcmp("player", cmd[0])) {
+		player_send_string(player, "* cmd: player <number>\n");
+		player_send_info_about(player, number);
+	} else if (!strcmp("prod", cmd[0])) {
+		player_send_string(player, "* cmd: prod <count>\n");
+		/*player has max count of prod, refresh every month*/
+		/*TODO*/
+	} else if (!strcmp("build", cmd[0])) {
+		player_send_string(player, "* cmd: build <count>\n");
+		/*request for factory with turn of creation*/
+		/*bank looks to the list of requests and builds if it's time*/
+		/*TODO*/
+	} else {
+		session_send_string(player, msg_warn);
+		return 0;
+	}
+	return 1;
+}
+
+int handler_command_3(struct session *player, char **cmd)
+{
+	char *endptr1, *endptr2;
+	int count = strtol(cmd[1], &endptr1, 10);
+	int price = strtol(cmd[2], &endptr2, 10);
+	if (*endptr1 || *endptr2) {
+		session_send_string(player, msg_warn);
+		return 0;
+	}
+
+	if (!strcmp("buy", cmd[0])) {
+		player_send_string(player, "* cmd: buy <count> <price>\n");
+	} else if (!strcmp("sell", cmd[0])) {
+		player_send_string(player, "* cmd: sell <count> <price>\n");
+	} else {
+		session_send_string(player, msg_warn);
+		return 0;
+	}
+	return 1;
+}
+/*=====END OF COMMAND HANDLERS=====*/
+
 void session_handle_command(struct session *sess, const char *line)
 {
 	char **cmd;
 	int size;
-	/* DEBUG */ printf("PLAYER[%i]: ", sess->number);
-	/* DEBUG */ printf("handle_command: [%s]\n", line);
+	/* DEBUG */ printf("PLAYER[%i]:", sess->number);
+	/* DEBUG */ printf(" handle_command: \n\t");
 	cmd = session_handle_packline(line);
 	size = packline_size(cmd);
 	
-	if (size == 1)
-	{
-		if (!strcmp("myinfo", cmd[0])) {
-			player_send_info_about(sess->fd, sess->number);
-		}
+	if (size == 1) {
+		handler_command_1(sess, cmd);
 	} else if (size == 2) {
-		if(!strcmp("player", cmd[0])) {
-			char *endptr;
-			int number = strtol(cmd[1], &endptr, 10);
-			if (*endptr) {	
-				session_send_string(sess, msg_warn);
-			} else {
-				player_send_info_about(sess->fd, number);
-			}
-		} else {
-			session_send_string(sess, msg_warn);
-		}
+		handler_command_2(sess, cmd);
+	} else if (size == 3) {
+		handler_command_3(sess, cmd);
 	} else {
 		if (*cmd)
 			session_send_string(sess, msg_warn);
@@ -273,7 +353,7 @@ void session_check_lf(struct session *sess)
 	if (line[pos-1] == '\r')
 		line[pos-1] = 0;
 
-	/*DEBUG*/ //printf("check_lf: [%s]\n", line);
+	/*DEBUG*/ /*printf("check_lf: [%s]\n", line);*/
 	session_fsm_step(sess, line);
 }
 
@@ -323,7 +403,7 @@ void bank_audit()
 	printf("***BANK AUDIT***\n");
 	printf("*max players:\t%i\n",bank->player_max_count);
 	printf("*player_count:\t%i\n",bank->player_count);
-	for (i=0;i < SESS_ARR_SIZE;i++) {
+	for (i=4;i < SESS_ARR_SIZE;i++) {
 		if (bank->player[i])
 			printf("*\tplayer %i [%i]\n",i,bank->player[i]->number);
 		else
