@@ -1,0 +1,379 @@
+==20259== Memcheck, a memory error detector
+==20259== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==20259== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==20259== Command: ./gameserver 7777 2
+==20259== 
+==20259== Invalid write of size 4
+==20259==    at 0x10000210B: bank_setup (gameserver.c:550)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259==  Address 0x100df0898 is 0 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid write of size 4
+==20259==    at 0x100002126: bank_setup (gameserver.c:552)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259==  Address 0x100df089c is 4 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid write of size 4
+==20259==    at 0x10000212C: bank_setup (gameserver.c:553)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259==  Address 0x100df08a0 is 8 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A17: bank_audit (gameserver.c:423)
+==20259==    by 0x100002137: bank_setup (gameserver.c:554)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259==  Address 0x100df0898 is 0 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A35: bank_audit (gameserver.c:424)
+==20259==    by 0x100002137: bank_setup (gameserver.c:554)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259==  Address 0x100df089c is 4 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A53: bank_audit (gameserver.c:425)
+==20259==    by 0x100002137: bank_setup (gameserver.c:554)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259==  Address 0x100df08a0 is 8 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A77: bank_audit (gameserver.c:426)
+==20259==    by 0x100002137: bank_setup (gameserver.c:554)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259==  Address 0x100df089c is 4 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x100654A28: _platform_memchr$VARIANT$Base (in /usr/lib/system/libsystem_platform.dylib)
+==20259==    by 0x1002E89E9: __sfvwrite (in /usr/lib/system/libsystem_c.dylib)
+==20259==    by 0x1002F25FE: __vfprintf (in /usr/lib/system/libsystem_c.dylib)
+==20259==    by 0x100317058: __v2printf (in /usr/lib/system/libsystem_c.dylib)
+==20259==    by 0x1002EE741: vfprintf_l (in /usr/lib/system/libsystem_c.dylib)
+==20259==    by 0x1002EC7CA: printf (in /usr/lib/system/libsystem_c.dylib)
+==20259==    by 0x10000231A: server_accept_client (gameserver.c:596)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100000B31: player_setup (gameserver.c:99)
+==20259==    by 0x10000235C: server_accept_client (gameserver.c:604)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df08a0 is 8 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid write of size 4
+==20259==    at 0x100000B37: player_setup (gameserver.c:99)
+==20259==    by 0x10000235C: server_accept_client (gameserver.c:604)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df08a0 is 8 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100000B3D: player_setup (gameserver.c:100)
+==20259==    by 0x10000235C: server_accept_client (gameserver.c:604)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df08a0 is 8 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001E62: bank_check_count_player (gameserver.c:494)
+==20259==    by 0x100002361: server_accept_client (gameserver.c:605)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df08a0 is 8 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001E68: bank_check_count_player (gameserver.c:494)
+==20259==    by 0x100002361: server_accept_client (gameserver.c:605)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df089c is 4 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A17: bank_audit (gameserver.c:423)
+==20259==    by 0x100002366: server_accept_client (gameserver.c:606)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df0898 is 0 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A35: bank_audit (gameserver.c:424)
+==20259==    by 0x100002366: server_accept_client (gameserver.c:606)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df089c is 4 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A53: bank_audit (gameserver.c:425)
+==20259==    by 0x100002366: server_accept_client (gameserver.c:606)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df08a0 is 8 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A77: bank_audit (gameserver.c:426)
+==20259==    by 0x100002366: server_accept_client (gameserver.c:606)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df089c is 4 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001EF7: bank_check_count_player (gameserver.c:503)
+==20259==    by 0x100002361: server_accept_client (gameserver.c:605)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df0898 is 0 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid write of size 4
+==20259==    at 0x100001EFD: bank_check_count_player (gameserver.c:503)
+==20259==    by 0x100002361: server_accept_client (gameserver.c:605)
+==20259==    by 0x1000025FB: server_run (gameserver.c:648)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df0898 is 0 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x1000B0B52: _platform_strcmp (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x100001282: handler_command_1 (gameserver.c:230)
+==20259==    by 0x10000163F: session_handle_command (gameserver.c:309)
+==20259==    by 0x100001726: session_fsm_step (gameserver.c:330)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x100001286: handler_command_1 (gameserver.c:230)
+==20259==    by 0x10000163F: session_handle_command (gameserver.c:309)
+==20259==    by 0x100001726: session_fsm_step (gameserver.c:330)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x1000B0B52: _platform_strcmp (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000012B6: handler_command_1 (gameserver.c:232)
+==20259==    by 0x10000163F: session_handle_command (gameserver.c:309)
+==20259==    by 0x100001726: session_fsm_step (gameserver.c:330)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x1000012BA: handler_command_1 (gameserver.c:232)
+==20259==    by 0x10000163F: session_handle_command (gameserver.c:309)
+==20259==    by 0x100001726: session_fsm_step (gameserver.c:330)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x1000B0B52: _platform_strcmp (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000012E7: handler_command_1 (gameserver.c:235)
+==20259==    by 0x10000163F: session_handle_command (gameserver.c:309)
+==20259==    by 0x100001726: session_fsm_step (gameserver.c:330)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x1000012EB: handler_command_1 (gameserver.c:235)
+==20259==    by 0x10000163F: session_handle_command (gameserver.c:309)
+==20259==    by 0x100001726: session_fsm_step (gameserver.c:330)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x1000B0B52: _platform_strcmp (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x100001351: handler_command_1 (gameserver.c:240)
+==20259==    by 0x10000163F: session_handle_command (gameserver.c:309)
+==20259==    by 0x100001726: session_fsm_step (gameserver.c:330)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x1000B0B68: _platform_strcmp (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x100001351: handler_command_1 (gameserver.c:240)
+==20259==    by 0x10000163F: session_handle_command (gameserver.c:309)
+==20259==    by 0x100001726: session_fsm_step (gameserver.c:330)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x100001355: handler_command_1 (gameserver.c:240)
+==20259==    by 0x10000163F: session_handle_command (gameserver.c:309)
+==20259==    by 0x100001726: session_fsm_step (gameserver.c:330)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A17: bank_audit (gameserver.c:423)
+==20259==    by 0x10000172B: session_fsm_step (gameserver.c:332)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df0898 is 0 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A35: bank_audit (gameserver.c:424)
+==20259==    by 0x10000172B: session_fsm_step (gameserver.c:332)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df089c is 4 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A53: bank_audit (gameserver.c:425)
+==20259==    by 0x10000172B: session_fsm_step (gameserver.c:332)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df08a0 is 8 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100001A77: bank_audit (gameserver.c:426)
+==20259==    by 0x10000172B: session_fsm_step (gameserver.c:332)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df089c is 4 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Conditional jump or move depends on uninitialised value(s)
+==20259==    at 0x1000B0B68: _platform_strcmp (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000012E7: handler_command_1 (gameserver.c:235)
+==20259==    by 0x10000163F: session_handle_command (gameserver.c:309)
+==20259==    by 0x100001726: session_fsm_step (gameserver.c:330)
+==20259==    by 0x1000018B6: session_check_lf (gameserver.c:375)
+==20259==    by 0x100001965: session_read (gameserver.c:392)
+==20259==    by 0x10000268B: server_run (gameserver.c:657)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259== 
+==20259== Invalid read of size 4
+==20259==    at 0x100002422: server_session_close (gameserver.c:618)
+==20259==    by 0x1000026CB: server_run (gameserver.c:661)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df08a0 is 8 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
+==20259== Invalid write of size 4
+==20259==    at 0x100002428: server_session_close (gameserver.c:618)
+==20259==    by 0x1000026CB: server_run (gameserver.c:661)
+==20259==    by 0x1000028F5: main (gameserver.c:716)
+==20259==  Address 0x100df08a0 is 8 bytes after a block of size 8 alloc'd
+==20259==    at 0x1000AF086: malloc (in /usr/local/Cellar/valgrind/3.15.0/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==20259==    by 0x1000020FD: bank_setup (gameserver.c:549)
+==20259==    by 0x100002274: server_setup (gameserver.c:581)
+==20259==    by 0x1000028D7: main (gameserver.c:712)
+==20259== 
