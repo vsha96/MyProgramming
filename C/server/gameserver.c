@@ -71,12 +71,28 @@ struct session { /*equals player in bank*/
 	int material; /* 4 */
 	int product; /* 2 */
 	int factory; /* 2 */
-	/*refreshable inf: max count of prod*/
+	/*refreshable inf*/
+	int max_product; /*in every month equals count of factories*/
+	int request_auction; /*0 or 1*/
+};
+
+struct app_build {
+	int month; /*every turn it decreases*/
+	int sd; /*without search will come to the player*/
+	struct app_build *next;
+};
+
+struct app_auction {
+	int count;
+	int price;
+	int sd;
+	struct app_auction *next;
 };
 
 struct bank_stat {
 	struct session **player; /*equals sess_array in serv, it's same*/
 	int turn;
+
 	int market_level;
 	int market_material;
 	int market_material_price;
@@ -85,6 +101,9 @@ struct bank_stat {
 
 	int player_max_count; /*we wait for N players before the start*/
 	int player_count;
+
+	struct app_build *build;
+	struct app_auction *auction;
 };
 
 struct bank_stat *bank;
@@ -98,6 +117,7 @@ void bank_send_news_result();
 void bank_send_news_finish();
 
 void bank_check_count_player();
+void bank_player_refresh_inf();
 void bank_activate_player();
 void bank_tax();
 
@@ -142,6 +162,9 @@ void player_setup(int sd)
 	bank->player[sd]->material = 4;
 	bank->player[sd]->product = 2;
 	bank->player[sd]->factory = 2;
+	/*refreshable inf TODO*/
+	bank->player[sd]->max_product = 0;
+	bank->player[sd]->request_auction = 0;
 }
 
 void player_send_info_about(struct session *sess, int tag)
@@ -166,6 +189,12 @@ void player_send_info_about(struct session *sess, int tag)
 		player_send_int(player, target->product);
 		player_send_string(player,"* Factory:    \t");
 		player_send_int(player, target->factory);
+	
+		/* // DEBUG
+		player_send_string(player,"* MAX PROD:    \t");
+		player_send_int(player, target->max_product);
+		*/
+
 	} else {	
 		player_send_string(player,"* No player ");
 		player_send_int(player, tag);
@@ -188,7 +217,7 @@ void player_send_market(struct session *player)
 
 void player_send_help(struct session *player)
 {
-	player_send_string(player,"* myinfo\n");
+	player_send_string(player,"* me\n");
 	player_send_string(player,"\t- just your info\n");
 	player_send_string(player,"* player <number>\n");
 	player_send_string(player,"\t- receive inf about player\n");
@@ -204,6 +233,34 @@ void player_send_help(struct session *player)
 	player_send_string(player,"\t- buy material\n");
 	player_send_string(player,"* sell <count> <price>\n");
 	player_send_string(player,"\t- sell production\n");
+}
+
+void bank_build_print()
+{ /*TODO*/ /*DEBUG*/
+	struct app_build *temp;
+	temp = bank->build;
+	while(temp) {
+		printf("[m:%i sd:%i]",temp->month,temp->sd);
+		temp = temp->next; 
+	}
+	printf("\n");
+}
+
+void player_request_build(struct session *player)
+{
+	struct app_build **app;
+	app = malloc(sizeof(struct app_build*));
+	*app = bank->build;
+	while (app[0] && app[0]->next) {
+		app[0]++;
+	}
+	app[0]->next = malloc(sizeof(struct app_build));
+	app[0] = app[0]->next;
+	app[0]->month = 4;
+	app[0]->sd = player->fd;
+	app[0]->next = NULL;
+	/*TODO*/
+	bank_build_print();
 }
 
 struct session *session_make_new(int fd, struct sockaddr_in *from)
@@ -281,12 +338,14 @@ char **session_handle_packline(const char *line)
 /*=====COMMAND HANDLERS=====*/
 int handler_command_1(struct session *player, char **cmd)
 {
+	/* DEBUG */
 	if(!strcmp("finish", cmd[0])) {
+		player_send_string(player, "* cmd: FINISH\n");
 		player->state = fsm_finish;
 		return 1;
 	}
 
-	if (!strcmp("myinfo", cmd[0])) {
+	if (!strcmp("me", cmd[0])) {
 		player_send_info_about(player, player->number);
 	} else if (!strcmp("market", cmd[0])) {
 		player_send_market(player);
@@ -315,12 +374,22 @@ int handler_command_2(struct session *player, char **cmd)
 	if (!strcmp("player", cmd[0])) {
 		player_send_info_about(player, number);
 	} else if (!strcmp("prod", cmd[0])) {
-		player_send_string(player, "* cmd: prod <count>\n");
-		/*player has max count of prod, refresh every month*/
-		/*TODO*/
+		if (player->money < 2000*number) {
+			player_send_string(player, "* not enough money\n");
+		} else if (player->max_product < number) {
+			player_send_string(player, "* not enough factories\n");
+		} else {
+			player->money -= 2000*number;
+			player->material -= number;
+			player->max_product -= number;
+			player_send_string(player, "* - $");
+			player_send_int(player, 2000*number);
+			player->product += number;
+		}
 	} else if (!strcmp("build", cmd[0])) {
 		player_send_string(player, "* cmd: build <count>\n");
 		/*request for factory with turn of creation*/
+		player_request_build(player);
 		/*bank looks to the list of requests and builds if it's time*/
 		/*TODO*/
 	} else {
@@ -342,8 +411,10 @@ int handler_command_3(struct session *player, char **cmd)
 
 	if (!strcmp("buy", cmd[0])) {
 		player_send_string(player, "* cmd: buy <count> <price>\n");
+		/* TODO */
 	} else if (!strcmp("sell", cmd[0])) {
 		player_send_string(player, "* cmd: sell <count> <price>\n");
+		/* TODO */
 	} else {
 		session_send_string(player, msg_warn);
 		return 0;
@@ -387,15 +458,14 @@ void session_fsm_step(struct session *sess, char *line)
 
 			bank_audit();
 			bank_check_end_turn();
-			bank_check_finish();
+			//bank_check_finish();
 
 			free(line);
 			break;
 		/* for game: */
 		case fsm_end_turn:
 			break;
-		/* somewhere must be procedure for check 'are all users end?'
-		void server_end_turn(clients fds) */
+		/* somewhere must be procedure for check 'are all users end?' */
 		case fsm_finish:
 			/* smt will point end of the game... */
 		case fsm_close:
@@ -491,7 +561,9 @@ void bank_audit()
 	printf("*player_count:\t%i\n",bank->player_count);
 	for (i=4;i < 4 + bank->player_max_count;i++) {
 		if (bank->player[i]) {
-			printf("*\tplayer %i [%i] ",i,bank->player[i]->number);
+			printf("*\tplayer %i [%i]\t%i$\t",i,
+								bank->player[i]->number,
+								bank->player[i]->money);
 			if (bank->player[i]->state == fsm_wait_connection) {
 				printf("waiting\n");
 			} else if (bank->player[i]->state == fsm_command) {
@@ -522,7 +594,7 @@ void bank_send_news_turn()
 	int i;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
 		if (bank->player[i]) {
-			player_send_string(bank->player[i], "* TURN ");
+			player_send_string(bank->player[i], "* MONTH ");
 			player_send_int(bank->player[i], bank->turn);
 		}
 	}
@@ -535,7 +607,7 @@ void bank_send_news_result()
 
 void bank_send_news_finish()
 {
-	int i, winner;
+	int i, winner = -1;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
 		if (bank->player[i]) {
 			player_send_string(bank->player[i], "* GAME OVER \n");
@@ -547,9 +619,13 @@ void bank_send_news_finish()
 	}
 	for (i=0;i < SESS_ARR_SIZE;i++) {
 		if (bank->player[i]) {
-			player_send_string(bank->player[i], "* WINNER - PLAYER ");
-			player_send_int(bank->player[i],
+			if (winner != -1) {
+				player_send_string(bank->player[i], "* WINNER - PLAYER ");
+				player_send_int(bank->player[i],
 									bank->player[winner]->number);
+			} else {
+				player_send_string(bank->player[i], "* WINNER - NOBODY ");
+			}
 		}
 	}
 }
@@ -568,6 +644,23 @@ void bank_check_count_player()
 		bank_send_news_string("* GAME STARTS\n");
 		bank->turn += 1;
 
+		bank_player_refresh_inf();
+
+	}
+}
+
+void bank_player_refresh_inf()
+{
+	/*TODO TODO TODO*/
+	struct session *player;
+	int i;
+	for (i=0;i < SESS_ARR_SIZE;i++) {
+		player = bank->player[i];
+		if	(player &&
+			player->state != fsm_finish) {
+			player->max_product = player->factory;
+			player->request_auction = 0;
+		}
 	}
 }
 
@@ -585,15 +678,20 @@ void bank_activate_player()
 void bank_tax()
 {
 	struct session* player;
-	int i, total = 0;
+	int i, total;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
 		if	(bank->player[i] &&
-			bank->player[i]->state != fsm_finish) {
+				bank->player[i]->state != fsm_finish) {
 			player = bank->player[i];
-			
+			total = 0;
 			player->money -=  300*player->material; /* total += tax */
+			total += 300*player->material;
 			player->money -=  500*player->product;
+			total += 500*player->product;
 			player->money -= 1000*player->factory;
+			total += 1000*player->factory;
+			player_send_string(player, "* taxes: - $");
+			player_send_int(player, total);
 		}
 	}
 }
@@ -604,6 +702,20 @@ void bank_check_money()
 	/* and in check_end_turn */
 	/* if money < 0 -> player->state=fsm_finish*/
 	/* TODO */
+	struct session* player;
+	int i;
+	for (i=0;i < SESS_ARR_SIZE;i++) {
+		if	(bank->player[i] &&
+			bank->player[i]->state != fsm_finish) {
+			player = bank->player[i];
+			if (player->money < 0) {
+				/* DEBUG*/
+					printf("BANK: player %i BANKRUPT\n", player->number);
+				player->state = fsm_finish;
+				player_send_string(player, "* you lost\n");
+			}
+		}
+	}
 }
 
 void bank_market_change()
@@ -644,12 +756,12 @@ void bank_check_end_turn()
 		if	(bank->player[i] &&
 			bank->player[i]->state != fsm_end_turn &&
 			bank->player[i]->state != fsm_finish) {
-			printf("BANK: there are active players\n");
+			/*DEBUG*/ //printf("BANK: there are active players\n");
 			break;
 		}
 	}
 	if (i == SESS_ARR_SIZE) {
-		printf("BANK: there are NO active players\n");
+		/*DEBUG*/ //printf("BANK: there are NO active players\n");
 		/*TODO TODO TODO*/
 		/*handle requests for auction*/
 		/*handle requests for buildings*/
@@ -662,6 +774,9 @@ void bank_check_end_turn()
 		bank_calculate_market();
 		bank_tax();
 		bank_check_money();
+		bank_check_finish();
+		
+		bank_player_refresh_inf();
 
 		bank_activate_player();
 		bank_audit();
@@ -678,6 +793,7 @@ void bank_check_finish()
 		}
 	}
 	if ((bank->player_max_count - count) == 1 || 
+		(bank->player_max_count - count) == 0 ||
 			bank->player_count == 1) {
 		printf("=====GAME END=====\n");
 		bank_send_news_finish();
@@ -697,6 +813,10 @@ void bank_setup(struct server_stat *serv, int max_player)
 	bank->player = serv->sess_array;
 	bank->player_max_count = max_player;
 	bank->player_count = 0;
+	
+	bank->build = NULL;
+	bank->auction = NULL;
+
 	bank_audit();
 }
 /*==========END OF BANK ACTIONS==========*/
@@ -859,7 +979,6 @@ int main(int argc, char **argv)
 	/*there we alse have setup for bank*/
 	if (server_setup(&serv, port, max_player)) 
 		return 1;
-	
 
 	server_run(&serv);
 	return 0;
