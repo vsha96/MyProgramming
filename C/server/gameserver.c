@@ -73,7 +73,8 @@ struct session { /*equals player in bank*/
 	int factory; /* 2 */
 	/*refreshable inf*/
 	int max_product; /*in every month equals count of factories*/
-	int request_auction; /*0 or 1*/
+	int request_auction_buy; /*0 or 1*/
+	int request_auction_sell; /*0 or 1*/
 };
 
 struct app_build {
@@ -127,6 +128,8 @@ void bank_calculate_market();
 void bank_check_end_turn();
 void bank_check_finish();
 
+void bank_handle_build();
+
 /*procedure*/
 /*for game: send to all players news (what have just changed)*/
 
@@ -164,7 +167,8 @@ void player_setup(int sd)
 	bank->player[sd]->factory = 2;
 	/*refreshable inf TODO*/
 	bank->player[sd]->max_product = 0;
-	bank->player[sd]->request_auction = 0;
+	bank->player[sd]->request_auction_buy = 0;
+	bank->player[sd]->request_auction_sell = 0;
 }
 
 void player_send_info_about(struct session *sess, int tag)
@@ -236,9 +240,10 @@ void player_send_help(struct session *player)
 }
 
 void bank_build_print()
-{ /*TODO*/ /*DEBUG*/
+{ /*DEBUG*/
 	struct app_build *temp;
 	temp = bank->build;
+	printf("REQ_BUILD:");
 	while(temp) {
 		printf("[m:%i sd:%i]",temp->month,temp->sd);
 		temp = temp->next; 
@@ -248,19 +253,19 @@ void bank_build_print()
 
 void player_request_build(struct session *player)
 {
-	struct app_build **app;
-	app = malloc(sizeof(struct app_build*));
-	*app = bank->build;
-	while (app[0] && app[0]->next) {
-		app[0]++;
+	struct app_build *app, *current = bank->build;
+	app = malloc(sizeof(*app));
+	app->month = 4;
+	app->sd = player->fd;
+	app->next = NULL;
+	if (current == NULL) {
+		bank->build = app;
+	} else {
+		while(current->next != NULL) {
+			current = current->next;
+		}
+		current->next = app;
 	}
-	app[0]->next = malloc(sizeof(struct app_build));
-	app[0] = app[0]->next;
-	app[0]->month = 4;
-	app[0]->sd = player->fd;
-	app[0]->next = NULL;
-	/*TODO*/
-	bank_build_print();
 }
 
 struct session *session_make_new(int fd, struct sockaddr_in *from)
@@ -364,8 +369,8 @@ int handler_command_1(struct session *player, char **cmd)
 
 int handler_command_2(struct session *player, char **cmd)
 {
-	char *endptr;
-	int number = strtol(cmd[1], &endptr, 10);
+	char *endptr = NULL;
+	int i, number = strtol(cmd[1], &endptr, 10);
 	if (*endptr) {
 		session_send_string(player, msg_warn);
 		return 0;
@@ -387,11 +392,15 @@ int handler_command_2(struct session *player, char **cmd)
 			player->product += number;
 		}
 	} else if (!strcmp("build", cmd[0])) {
-		player_send_string(player, "* cmd: build <count>\n");
 		/*request for factory with turn of creation*/
-		player_request_build(player);
-		/*bank looks to the list of requests and builds if it's time*/
-		/*TODO*/
+		player->money -= 2500*number;
+		player_send_string(player, "* - $");
+		player_send_int(player, 2500*number);
+		for (i=0;i<number;i++) {
+			player_request_build(player);
+		}
+		bank_build_print();
+
 	} else {
 		session_send_string(player, msg_warn);
 		return 0;
@@ -401,7 +410,7 @@ int handler_command_2(struct session *player, char **cmd)
 
 int handler_command_3(struct session *player, char **cmd)
 {
-	char *endptr1, *endptr2;
+	char *endptr1 = NULL, *endptr2 = NULL;
 	int count = strtol(cmd[1], &endptr1, 10);
 	int price = strtol(cmd[2], &endptr2, 10);
 	if (*endptr1 || *endptr2) {
@@ -659,7 +668,9 @@ void bank_player_refresh_inf()
 		if	(player &&
 			player->state != fsm_finish) {
 			player->max_product = player->factory;
-			player->request_auction = 0;
+			player->request_auction_buy = 0;
+			player->request_auction_sell = 0;
+
 		}
 	}
 }
@@ -776,7 +787,11 @@ void bank_check_end_turn()
 		bank_check_money();
 		bank_check_finish();
 		
+		bank_handle_build();
+		bank_build_print();
+
 		bank_player_refresh_inf();
+		
 
 		bank_activate_player();
 		bank_audit();
@@ -797,6 +812,34 @@ void bank_check_finish()
 			bank->player_count == 1) {
 		printf("=====GAME END=====\n");
 		bank_send_news_finish();
+	}
+}
+
+void bank_handle_build()
+{
+	int sd;
+	struct app_build *current = bank->build;
+	if (current) {
+		while (current) {
+			sd = current->sd;
+			if (current->month == 0) {
+				bank->player[sd]->factory += 1;
+				/*delete head*/
+				bank->build = current->next;
+				free(current);
+				current = bank->build;
+				continue;
+			} else if (current->month == 1) {
+				bank->player[sd]->money -= 2500;
+				current->month -= 1;
+				player_send_string(bank->player[sd],
+					"*new factory in the next month - $");
+				player_send_int(bank->player[sd], 2500);
+			} else {
+				current->month -= 1;
+			}
+			current = current->next;
+		}
 	}
 }
 
