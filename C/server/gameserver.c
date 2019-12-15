@@ -73,8 +73,8 @@ struct session { /*equals player in bank*/
 	int factory; /* 2 */
 	/*refreshable inf*/
 	int max_product; /*in every month equals count of factories*/
-	int request_auction_buy; /*0 or 1*/
-	int request_auction_sell; /*0 or 1*/
+	int app_buy; /*0 or 1*/
+	int app_sell; /*0 or 1*/
 };
 
 struct app_build {
@@ -87,7 +87,6 @@ struct app_auction {
 	int count;
 	int price;
 	int sd;
-	struct app_auction *next;
 };
 
 struct bank_stat {
@@ -104,7 +103,9 @@ struct bank_stat {
 	int player_count;
 
 	struct app_build *build;
-	struct app_auction *auction;
+	/* TODO delete all list after refresh_inf*/
+	struct app_auction auction_buy[SESS_ARR_SIZE][1];
+	struct app_auction auction_sell[SESS_ARR_SIZE][1];
 };
 
 struct bank_stat *bank;
@@ -130,6 +131,9 @@ void bank_check_finish();
 
 void bank_handle_build();
 
+void bank_handle_auction();
+void bank_auction_print();
+void bank_auction_delete();
 /*procedure*/
 /*for game: send to all players news (what have just changed)*/
 
@@ -161,14 +165,14 @@ void player_setup(int sd)
 {
 	bank->player_count += 1;
 	bank->player[sd]->number = bank->player_count;
-	bank->player[sd]->money = 10000;
+	bank->player[sd]->money = 100000;
 	bank->player[sd]->material = 4;
 	bank->player[sd]->product = 2;
 	bank->player[sd]->factory = 2;
 	/*refreshable inf TODO*/
 	bank->player[sd]->max_product = 0;
-	bank->player[sd]->request_auction_buy = 0;
-	bank->player[sd]->request_auction_sell = 0;
+	bank->player[sd]->app_buy = 0;
+	bank->player[sd]->app_sell = 0;
 }
 
 void player_send_info_about(struct session *sess, int tag)
@@ -185,7 +189,7 @@ void player_send_info_about(struct session *sess, int tag)
 	if (target) {
 		player_send_string(player,"* Number:     \t");
 		player_send_int(player, target->number);
-		player_send_string(player,"* Money:      \t");
+		player_send_string(player,"* Money:     \t$");
 		player_send_int(player, target->money);
 		player_send_string(player,"* Material:   \t");
 		player_send_int(player, target->material);
@@ -266,6 +270,45 @@ void player_request_build(struct session *player)
 		}
 		current->next = app;
 	}
+}
+
+/*
+	bank->auction_buy[i]->count = 0;
+	bank->auction_buy[i]->price = 0;
+	bank->auction_buy[i]->sd = 0;
+	bank->auction_sell[i]->count = 0;
+	bank->auction_sell[i]->price = 0;
+	bank->auction_sell[i]->sd = 0;
+*/
+
+void player_app_buy(int count, int price, struct session* player)
+{
+	int sd = player->fd;
+	if (player->app_buy == 1) {
+		player_send_string(player, "* !you've sent app for material\n");
+	} else if (count > market_count[bank->market_level][0]) {
+		player_send_string(player, "* !count > material of market\n");
+	} else if (price < market_price[bank->market_level][0]) {
+		player_send_string(player, "* !price < min price of market\n");
+	} else {
+		player->app_buy = 1;
+		bank->auction_buy[sd]->count = count;
+		bank->auction_buy[sd]->price = price;
+		bank->auction_buy[sd]->sd = sd;
+		/*TODO*/
+		bank_auction_print();
+	}
+}
+
+void player_app_sell(int count, int price, struct session* player)
+{
+	int sd = player->fd;
+	if (player->product < count) {
+		player_send_string(player, "* not enough product\n");
+	} else {
+		/*TODO*/
+	}
+
 }
 
 struct session *session_make_new(int fd, struct sockaddr_in *from)
@@ -381,6 +424,8 @@ int handler_command_2(struct session *player, char **cmd)
 	} else if (!strcmp("prod", cmd[0])) {
 		if (player->money < 2000*number) {
 			player_send_string(player, "* not enough money\n");
+		} else if (player->material < number) {
+			player_send_string(player, "* not enough material\n");
 		} else if (player->max_product < number) {
 			player_send_string(player, "* not enough factories\n");
 		} else {
@@ -392,7 +437,6 @@ int handler_command_2(struct session *player, char **cmd)
 			player->product += number;
 		}
 	} else if (!strcmp("build", cmd[0])) {
-		/*request for factory with turn of creation*/
 		player->money -= 2500*number;
 		player_send_string(player, "* - $");
 		player_send_int(player, 2500*number);
@@ -400,7 +444,6 @@ int handler_command_2(struct session *player, char **cmd)
 			player_request_build(player);
 		}
 		bank_build_print();
-
 	} else {
 		session_send_string(player, msg_warn);
 		return 0;
@@ -420,9 +463,11 @@ int handler_command_3(struct session *player, char **cmd)
 
 	if (!strcmp("buy", cmd[0])) {
 		player_send_string(player, "* cmd: buy <count> <price>\n");
+		player_app_buy(count,price,player);
 		/* TODO */
 	} else if (!strcmp("sell", cmd[0])) {
 		player_send_string(player, "* cmd: sell <count> <price>\n");
+		player_app_sell(count,price,player);
 		/* TODO */
 	} else {
 		session_send_string(player, msg_warn);
@@ -668,8 +713,8 @@ void bank_player_refresh_inf()
 		if	(player &&
 			player->state != fsm_finish) {
 			player->max_product = player->factory;
-			player->request_auction_buy = 0;
-			player->request_auction_sell = 0;
+			player->app_buy = 0;
+			player->app_sell = 0;
 
 		}
 	}
@@ -790,8 +835,13 @@ void bank_check_end_turn()
 		bank_handle_build();
 		bank_build_print();
 
+		bank_check_money();
+		bank_check_finish();
+
+		bank_handle_auction();
+		bank_auction_delete();
+
 		bank_player_refresh_inf();
-		
 
 		bank_activate_player();
 		bank_audit();
@@ -843,6 +893,44 @@ void bank_handle_build()
 	}
 }
 
+void bank_handle_auction()
+{
+	/*TODO*/
+}
+
+void bank_auction_print()
+{
+	int i;
+	printf("\t=====AUCTION BUY=====\n");
+	for (i=4;i < 4+bank->player_max_count;i++) {
+		printf("\t[count(%i)\tprice(%i)\tsd(%i)]\n",
+				bank->auction_buy[i]->count,
+				bank->auction_buy[i]->price,
+				bank->auction_buy[i]->sd);
+	}
+	printf("\t=====AUCTION SELL=====\n");
+	for (i=4;i < 4+bank->player_max_count;i++) {
+		printf("\t[count(%i)\tprice(%i)\tsd(%i)]\n",
+				bank->auction_sell[i]->count,
+				bank->auction_sell[i]->price,
+				bank->auction_sell[i]->sd);
+	}
+}
+
+void bank_auction_delete()
+{
+	int i;
+	for (i=0;i<SESS_ARR_SIZE;i++)
+	{
+		bank->auction_buy[i]->count = 0;
+		bank->auction_buy[i]->price = 0;
+		bank->auction_buy[i]->sd = 0;
+		bank->auction_sell[i]->count = 0;
+		bank->auction_sell[i]->price = 0;
+		bank->auction_sell[i]->sd = 0;
+	}
+}
+
 void bank_setup(struct server_stat *serv, int max_player)
 {
 	bank = malloc(sizeof(struct bank_stat));
@@ -858,7 +946,9 @@ void bank_setup(struct server_stat *serv, int max_player)
 	bank->player_count = 0;
 	
 	bank->build = NULL;
-	bank->auction = NULL;
+	
+	bank_auction_delete();
+	bank_auction_print();
 
 	bank_audit();
 }
