@@ -114,8 +114,8 @@ struct bank_stat *bank;
 /*void bank_setup(struct server_stat *serv, int max_player);*/
 void bank_audit();
 void bank_send_news_string(char*);
+void bank_send_news_int(int);
 void bank_send_news_turn();
-void bank_send_news_result();
 void bank_send_news_finish();
 
 void bank_check_count_player();
@@ -131,7 +131,8 @@ void bank_check_finish();
 
 void bank_handle_build();
 
-void bank_handle_auction();
+void bank_handle_auction_buy();
+void bank_handle_auction_sell();
 void bank_auction_print();
 void bank_auction_delete();
 /*procedure*/
@@ -215,11 +216,11 @@ void player_send_market(struct session *player)
 	player_send_int(player, bank->market_level + 1);
 	player_send_string(player, "* material count = ");
 	player_send_int(player, bank->market_material);
-	player_send_string(player, "*        1 item ~ $");
+	player_send_string(player, "*        1 item price >= $");
 	player_send_int(player, bank->market_material_price);
 	player_send_string(player, "* product count  = ");
 	player_send_int(player, bank->market_product);
-	player_send_string(player, "*        1 item ~ $");
+	player_send_string(player, "*        1 item price <= $");
 	player_send_int(player, bank->market_product_price);
 }
 
@@ -272,41 +273,41 @@ void player_request_build(struct session *player)
 	}
 }
 
-/*
-	bank->auction_buy[i]->count = 0;
-	bank->auction_buy[i]->price = 0;
-	bank->auction_buy[i]->sd = 0;
-	bank->auction_sell[i]->count = 0;
-	bank->auction_sell[i]->price = 0;
-	bank->auction_sell[i]->sd = 0;
-*/
-
 void player_app_buy(int count, int price, struct session* player)
 {
 	int sd = player->fd;
 	if (player->app_buy == 1) {
-		player_send_string(player, "* !you've sent app for material\n");
-	} else if (count > market_count[bank->market_level][0]) {
-		player_send_string(player, "* !count > material of market\n");
-	} else if (price < market_price[bank->market_level][0]) {
-		player_send_string(player, "* !price < min price of market\n");
+		player_send_string(player, "* you've sent app for material\n");
+	} else if (count > bank->market_material) {
+		player_send_string(player, "* count > material of market\n");
+	} else if (price < bank->market_material_price) {
+		player_send_string(player, "* price < min price of material\n");
 	} else {
+		player_send_string(player, "* submited\n");
 		player->app_buy = 1;
 		bank->auction_buy[sd]->count = count;
 		bank->auction_buy[sd]->price = price;
 		bank->auction_buy[sd]->sd = sd;
-		/*TODO*/
-		bank_auction_print();
 	}
 }
 
 void player_app_sell(int count, int price, struct session* player)
 {
 	int sd = player->fd;
-	if (player->product < count) {
+	if (player->app_sell == 1) {
+		player_send_string(player, "* you've sent app for product\n");
+	} else if (player->product < count) {
 		player_send_string(player, "* not enough product\n");
+	} else if (count > bank->market_product) {
+		player_send_string(player, "* count > product of market\n");
+	} else if (price > bank->market_product_price) {
+		player_send_string(player, "* price > max price of product\n");
 	} else {
-		/*TODO*/
+		player_send_string(player, "* submited\n");
+		player->app_sell = 1;
+		bank->auction_sell[sd]->count = count;
+		bank->auction_sell[sd]->price = price;
+		bank->auction_sell[sd]->sd = sd;
 	}
 
 }
@@ -429,6 +430,7 @@ int handler_command_2(struct session *player, char **cmd)
 		} else if (player->max_product < number) {
 			player_send_string(player, "* not enough factories\n");
 		} else {
+			player_send_string(player, "* produced\n");
 			player->money -= 2000*number;
 			player->material -= number;
 			player->max_product -= number;
@@ -437,6 +439,7 @@ int handler_command_2(struct session *player, char **cmd)
 			player->product += number;
 		}
 	} else if (!strcmp("build", cmd[0])) {
+		player_send_string(player, "* submited\n");
 		player->money -= 2500*number;
 		player_send_string(player, "* - $");
 		player_send_int(player, 2500*number);
@@ -462,13 +465,9 @@ int handler_command_3(struct session *player, char **cmd)
 	}
 
 	if (!strcmp("buy", cmd[0])) {
-		player_send_string(player, "* cmd: buy <count> <price>\n");
 		player_app_buy(count,price,player);
-		/* TODO */
 	} else if (!strcmp("sell", cmd[0])) {
-		player_send_string(player, "* cmd: sell <count> <price>\n");
 		player_app_sell(count,price,player);
-		/* TODO */
 	} else {
 		session_send_string(player, msg_warn);
 		return 0;
@@ -643,6 +642,16 @@ void bank_send_news_string(char *line)
 	}
 }
 
+void bank_send_news_int(int n)
+{
+	int i;
+	for (i=0;i < SESS_ARR_SIZE;i++) {
+		if (bank->player[i]) {
+			player_send_int(bank->player[i], n);
+		}
+	}
+}
+
 void bank_send_news_turn()
 {
 	int i;
@@ -652,11 +661,6 @@ void bank_send_news_turn()
 			player_send_int(bank->player[i], bank->turn);
 		}
 	}
-}
-
-void bank_send_news_result()
-{
-	/*TODO*/
 }
 
 void bank_send_news_finish()
@@ -705,7 +709,6 @@ void bank_check_count_player()
 
 void bank_player_refresh_inf()
 {
-	/*TODO TODO TODO*/
 	struct session *player;
 	int i;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
@@ -818,30 +821,30 @@ void bank_check_end_turn()
 	}
 	if (i == SESS_ARR_SIZE) {
 		/*DEBUG*/ //printf("BANK: there are NO active players\n");
-		/*TODO TODO TODO*/
 		/*handle requests for auction*/
 		/*handle requests for buildings*/
 		/*refresh players inf*/
 		bank->turn += 1;
 		printf("=====TURN %i=====\n", bank->turn);
-		bank_send_news_turn();
-
-		bank_market_change();
-		bank_calculate_market();
+	
 		bank_tax();
-		bank_check_money();
-		bank_check_finish();
 		
 		bank_handle_build();
 		bank_build_print();
 
-		bank_check_money();
-		bank_check_finish();
-
-		bank_handle_auction();
+		bank_handle_auction_buy();
+		bank_handle_auction_sell();
 		bank_auction_delete();
-
+		
+		bank_check_money(); /*!REPLACED*/
+		bank_check_finish();
+		
+		bank_market_change(); /*!REPLACED*/
+		bank_calculate_market();
+		
 		bank_player_refresh_inf();
+		
+		bank_send_news_turn();
 
 		bank_activate_player();
 		bank_audit();
@@ -875,6 +878,8 @@ void bank_handle_build()
 			if (current->month == 0) {
 				bank->player[sd]->factory += 1;
 				/*delete head*/
+				player_send_string(bank->player[sd],
+					"*new factory available\n");
 				bank->build = current->next;
 				free(current);
 				current = bank->build;
@@ -893,23 +898,134 @@ void bank_handle_build()
 	}
 }
 
-void bank_handle_auction()
+void auction_buy_swap(int i, int j)
 {
-	/*TODO*/
+	int tcount, tprice, tsd;
+	tcount = bank->auction_buy[i]->count;
+	tprice = bank->auction_buy[i]->price;
+	tsd = bank->auction_buy[i]->sd;
+
+	bank->auction_buy[i]->count = bank->auction_buy[j]->count;
+	bank->auction_buy[i]->price = bank->auction_buy[j]->price;
+	bank->auction_buy[i]->sd = bank->auction_buy[j]->sd;
+
+	bank->auction_buy[j]->count = tcount;
+	bank->auction_buy[j]->price = tprice;
+	bank->auction_buy[j]->sd = tsd;
+}
+
+void auction_sell_swap(int i, int j)
+{
+	int tcount, tprice, tsd;
+	tcount = bank->auction_sell[i]->count;
+	tprice = bank->auction_sell[i]->price;
+	tsd = bank->auction_sell[i]->sd;
+
+	bank->auction_sell[i]->count = bank->auction_sell[j]->count;
+	bank->auction_sell[i]->price = bank->auction_sell[j]->price;
+	bank->auction_sell[i]->sd = bank->auction_sell[j]->sd;
+
+	bank->auction_sell[j]->count = tcount;
+	bank->auction_sell[j]->price = tprice;
+	bank->auction_sell[j]->sd = tsd;
+}
+
+void bank_handle_auction_buy()
+{
+	int i, j, count, price, sd;
+	/*BUY*/
+	struct app_auction *buy, *buy_next;
+	/* SORT */
+	for (j=SESS_ARR_SIZE;j>0;j--) {
+		for (i=0;i<j-1;i++) {
+			buy = bank->auction_buy[i];
+			buy_next = bank->auction_buy[i+1];
+			if (buy->price < buy_next->price) {
+				auction_buy_swap(i,i+1);
+			}
+		}
+	}
+	printf("SORT AUCTION BUY\n");
+	bank_auction_print();
+
+	bank_send_news_string("* ===AUCTION BUY===\n");
+	for (i=0;i<SESS_ARR_SIZE;i++) {
+		buy = bank->auction_buy[i];
+		if (buy->count != 0) {
+			count = buy->count;
+			price = buy->price;
+			sd = buy->sd;
+			if (bank->market_material >= count) {
+				bank->market_material -= count;
+				bank->player[sd]->money -= price*count;
+				bank->player[sd]->material += count;
+				bank_send_news_string("* player ");
+				bank_send_news_int(bank->player[sd]->number);
+				bank_send_news_string("* \tcount:\t");
+				bank_send_news_int(count);
+				bank_send_news_string("* \tprice:\t- $");
+				bank_send_news_int(price);
+				bank_send_news_string("* \ttotal price:\t- $");
+				bank_send_news_int(price*count);
+			}
+		}
+	}
+}
+
+void bank_handle_auction_sell()
+{
+	int i, j, count, price, sd;
+	/*SELL*/
+	struct app_auction *sell, *sell_next;
+	/* SORT */
+	for (j=SESS_ARR_SIZE;j>0;j--) {
+		for (i=0;i<j-1;i++) {
+			sell = bank->auction_sell[i];
+			sell_next = bank->auction_sell[i+1];
+			if (sell->price > sell_next->price) {
+				auction_sell_swap(i,i+1);
+			}
+		}
+	}
+	printf("SORT AUCTION SELL\n");
+	bank_auction_print();
+
+	bank_send_news_string("* ===AUCTION SELL===\n");
+	for (i=0;i<SESS_ARR_SIZE;i++) {
+		sell = bank->auction_sell[i];
+		if (sell->count != 0) {
+			count = sell->count;
+			price = sell->price;
+			sd = sell->sd;
+			if (bank->market_product >= count) {
+				bank->market_product -= count;
+				bank->player[sd]->money += price*count;
+				bank->player[sd]->product -= count;
+				bank_send_news_string("* player ");
+				bank_send_news_int(bank->player[sd]->number);
+				bank_send_news_string("* \tcount:\t");
+				bank_send_news_int(count);
+				bank_send_news_string("* \tprice:\t+ $");
+				bank_send_news_int(price);
+				bank_send_news_string("* \ttotal price:\t+ $");
+				bank_send_news_int(price*count);
+			}
+		}
+	}
 }
 
 void bank_auction_print()
 {
 	int i;
 	printf("\t=====AUCTION BUY=====\n");
-	for (i=4;i < 4+bank->player_max_count;i++) {
+	for (i=0;i < SESS_ARR_SIZE /*4+bank->player_max_count*/;i++) {
 		printf("\t[count(%i)\tprice(%i)\tsd(%i)]\n",
 				bank->auction_buy[i]->count,
 				bank->auction_buy[i]->price,
 				bank->auction_buy[i]->sd);
 	}
 	printf("\t=====AUCTION SELL=====\n");
-	for (i=4;i < 4+bank->player_max_count;i++) {
+	for (i=0;i < SESS_ARR_SIZE;i++) {
 		printf("\t[count(%i)\tprice(%i)\tsd(%i)]\n",
 				bank->auction_sell[i]->count,
 				bank->auction_sell[i]->price,
