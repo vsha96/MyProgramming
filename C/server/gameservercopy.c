@@ -18,8 +18,6 @@ int error_handler()
 #define INBUFSIZE 1024
 #define SESS_ARR_SIZE 16
 
-int global_count = 0;
-
 const int level_change[5][5] = {
 	{ 4, 4, 2, 1, 1},
 	{ 3, 4, 3, 1, 1},
@@ -67,7 +65,6 @@ struct session { /*equals player in bank*/
 	enum fsm_states state;
 	/*after end turn, we look in the bank: all players have done turn?*/
 	/*for game: information about resources*/
-	/* ? int status; */
 	int number; /*number of player*/ /*depends on count of players*/
 	int money; /* 10000 */ /*start count*/
 	int material; /* 4 */
@@ -1195,34 +1192,13 @@ int server_run(struct server_stat *serv)
 
 		for (i=0; i < serv->sess_array_size; i++)
 		{
-			int old_global_count = global_count, j; /* for news */
 			if (serv->sess_array[i] && FD_ISSET(i, &readfds))
 			{
 				printf("SERVER: call: session_read: %i\n", i);
 				ssr = session_read(serv->sess_array[i]);
-				if (old_global_count != global_count) /* for news */
-					j = i;
 				if (!ssr)
 					server_session_close(serv, i);
 			}
-			/*send news*/
-			if (old_global_count != global_count)
-			{
-				for (i=0; i < serv->sess_array_size; i++)
-				{	
-					if (serv->sess_array[i] && i != j)
-					{
-						session_send_string
-							(serv->sess_array[i], 
-								"Value have changed\n");	
-						session_send_int
-							(serv->sess_array[i],
-								global_count);
-					}
-				}
-			}
-			
-			/*sent news*/
 		}
 	}
 	return 0;
