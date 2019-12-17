@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <math.h>
 
 int error_handler()
 {
@@ -198,7 +199,7 @@ void plr_send_info_about(struct session *sess, int tag)
 		plr_send_string(plr,"* Factory:    \t");
 		plr_send_int(plr, target->factory);
 	
-		/* // DEBUG
+		/* 
 		plr_send_string(plr,"* MAX PROD:    \t");
 		plr_send_int(plr, target->max_product);
 		*/
@@ -409,7 +410,7 @@ int handler_command_1(struct session *plr, char **cmd)
 	} else if (!strcmp("market", cmd[0])) {
 		plr_send_market(plr);
 	} else if (!strcmp("turn", cmd[0])) {
-		/* DEBUG */ //printf("PLR[%i]: end_turn\n", plr->num);
+		/* DEBUG */ /*printf("PLR[%i]: end_turn\n", plr->num);*/
 		plr->state = fsm_end_turn;
 		plr_send_string(plr, "* you end turn\n");
 	} else if (!strcmp("help", cmd[0])) {
@@ -490,9 +491,9 @@ void sess_handle_command(struct session *sess, const char *line)
 {
 	char **cmd;
 	int size;
-	/* DEBUG */ //printf("PLAYER[%i]:", sess->num);
-	/* DEBUG */ //printf(" handle_command: \n\t");
-	/* DEBUG */ //packline_print(cmd);
+	/* DEBUG */ /*printf("PLAYER[%i]:", sess->num);*/
+	/* DEBUG */ /*printf(" handle_command: \n\t");*/
+	/* DEBUG */ /*packline_print(cmd);*/
 	cmd = sess_handle_packline(line);
 	size = packline_size(cmd);
 
@@ -540,10 +541,8 @@ void sess_check_lf(struct session *sess)
 {
 	int i, pos = -1;
 	char *line;
-	for (i=0; i < sess->buf_used; i++)
-	{
-		if (sess->buf[i] == '\n')
-		{
+	for (i=0; i < sess->buf_used; i++) {
+		if (sess->buf[i] == '\n') {
 			pos = i;
 			break;
 		}
@@ -724,8 +723,7 @@ void bank_plr_refresh_inf()
 	int i;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
 		plr = bank->plr[i];
-		if (plr &&
-			plr->state != fsm_finish) {
+		if (plr && plr->state != fsm_finish) {
 			plr->max_product = plr->factory;
 			plr->app_buy = 0;
 			plr->app_sell = 0;
@@ -738,8 +736,10 @@ void bank_activate_plr()
 {
 	int i;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
-		if(bank->plr[i] &&
-			bank->plr[i]->state != fsm_finish) {
+		if (
+			bank->plr[i] &&
+			bank->plr[i]->state != fsm_finish)
+		{
 			bank->plr[i]->state = fsm_command;
 		}
 	}
@@ -750,8 +750,10 @@ void bank_tax()
 	struct session* plr;
 	int i, total;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
-		if(bank->plr[i] &&
-			bank->plr[i]->state != fsm_finish) {
+		if (
+			bank->plr[i] &&
+			bank->plr[i]->state != fsm_finish)
+		{
 			plr = bank->plr[i];
 			total = 0;
 			plr->money -=  300*plr->material;
@@ -775,7 +777,8 @@ void bank_check_money()
 	int i;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
 		if (bank->plr[i] &&
-			bank->plr[i]->state != fsm_finish) {
+			bank->plr[i]->state != fsm_finish) 
+		{
 			plr = bank->plr[i];
 			if (plr->money < 0) {
 				plr->state = fsm_finish;
@@ -804,17 +807,15 @@ void bank_calculate_market()
 	int i, ml, count = 0;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
 		if(bank->plr[i] &&
-			bank->plr[i]->state != fsm_finish) {
+			bank->plr[i]->state != fsm_finish)
+		{
 			count += 1;
 		}
 	}
 	ml = bank->m_level;
-	bank->m_material =
-		(int)(count * m_count[ml][0]);
-	bank->m_material_price =
-		m_price[ml][0];
-	bank->m_product = 
-		(int)(count * m_count[ml][1]);
+	bank->m_material = (int)(count * m_count[ml][0]);
+	bank->m_material_price = m_price[ml][0];
+	bank->m_product = (int)(count * m_count[ml][1]);
 	bank->m_product_price = m_price[ml][1];
 }
 
@@ -824,7 +825,8 @@ void bank_check_end_turn()
 	for (i=0;i < SESS_ARR_SIZE;i++) {
 		if(bank->plr[i] &&
 			bank->plr[i]->state != fsm_end_turn &&
-			bank->plr[i]->state != fsm_finish) {
+			bank->plr[i]->state != fsm_finish)
+		{
 			break;
 		}
 	}
@@ -856,7 +858,6 @@ void bank_check_end_turn()
 
 		bank_activate_plr();
 		bank_audit();
-
 	}
 }
 
@@ -864,13 +865,16 @@ void bank_check_finish()
 {
 	int i, count=0;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
-		if (bank->plr[i] && bank->plr[i]->state == fsm_finish) {
+		if (bank->plr[i] &&
+			bank->plr[i]->state == fsm_finish) 
+		{
 			count++;
 		}
 	}
 	if((bank->plr_count - count) == 1 || 
 		(bank->plr_count - count) == 0 ||
-		bank->plr_count == 1) {
+		bank->plr_count == 1)
+	{
 		printf("=====GAME END=====\n");
 		bank_news_finish();
 	}
@@ -957,7 +961,8 @@ void bank_handle_auc_buy()
 			buy = bank->auc_buy[i];
 			buy_next = bank->auc_buy[i+1];
 			if (buy->price < 
-				buy_next->price) {
+				buy_next->price)
+			{
 				auc_buy_swap(i,i+1);
 			}
 		}
@@ -1000,7 +1005,8 @@ void bank_handle_auc_sell()
 			sell = bank->auc_sell[i];
 			sell_next = bank->auc_sell[i+1];
 			if (sell->price > 
-				sell_next->price) {
+				sell_next->price)
+			{
 				auc_sell_swap(i,i+1);
 			}
 		}
@@ -1036,7 +1042,7 @@ void bank_auc_print()
 {
 	int i;
 	printf("\t=====AUCTION BUY=====\n");
-	for (i=0;i < SESS_ARR_SIZE /*4+bank->plr_max_count*/;i++) {
+	for (i=0;i < SESS_ARR_SIZE;i++) {
 		printf("\t[count(%i)\tprice(%i)\tsd(%i)]\n",
 			bank->auc_buy[i]->count,
 			bank->auc_buy[i]->price,
@@ -1200,7 +1206,7 @@ int server_run(struct server_stat *serv)
 int main(int argc, char **argv)
 {
 	struct server_stat serv;
-	//struct bank_stat bank;
+	/*struct bank_stat bank;*/
 	int port, max_plr;
 	char *endptr;
 
@@ -1222,7 +1228,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	/*there we alse have setup for bank*/
+	/*there we have setup for bank*/
 	if (server_setup(&serv, port, max_plr)) 
 		return 1;
 
