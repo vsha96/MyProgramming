@@ -10,7 +10,7 @@ class complex {
 		complex(double r) { re = r; im = r; }
 		complex(double a_re, double a_im) { re = a_re; im = a_im; }
 		//destructor
-		~complex() {}
+		~complex() { printf("THEY KILLED ME\n"); }
 		//methods
 		double modulo() { return sqrt(re*re + im*im); }	
 };
@@ -18,5 +18,9 @@ class complex {
 int main() {
 	complex z(3,4);
 	printf("mod = %f\n", z.modulo());
+
+	complex *q;
+	q = new complex[10];
+	delete[] q;
 	
 }

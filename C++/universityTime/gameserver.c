@@ -190,15 +190,15 @@ void player_send_info_about(struct session *sess, int tag)
 	}
 	player = sess;
 	if (target) {
-		player_send_string(player,"* Number:     \t");
+		player_send_string(player,"# Number:     \t");
 		player_send_int(player, target->number);
-		player_send_string(player,"* Money:     \t$");
+		player_send_string(player,"# Money:     \t$ ");
 		player_send_int(player, target->money);
-		player_send_string(player,"* Material:   \t");
+		player_send_string(player,"# Material:   \t");
 		player_send_int(player, target->material);
-		player_send_string(player,"* Product:    \t");
+		player_send_string(player,"# Product:    \t");
 		player_send_int(player, target->product);
-		player_send_string(player,"* Factory:    \t");
+		player_send_string(player,"# Factory:    \t");
 		player_send_int(player, target->factory);
 	
 		/* // DEBUG
@@ -218,7 +218,7 @@ void player_send_stat(struct session *player)
 	for (i=0;i<SESS_ARR_SIZE;i++) {
 		if (bank->player[i] && 
 			bank->player[i]->number != player->number) {	
-			player_send_string(player, "* =PLAYER= ");
+			player_send_string(player, "# =PLAYER= ");
 			player_send_int(player, bank->player[i]->number);
 			player_send_info_about(player, bank->player[i]->number);
 		}
@@ -228,15 +228,15 @@ void player_send_stat(struct session *player)
 
 void player_send_market(struct session *player)
 {
-	player_send_string(player, "* market level   = ");
+	player_send_string(player, "# market level   = ");
 	player_send_int(player, bank->market_level + 1);
-	player_send_string(player, "* material count = ");
+	player_send_string(player, "# material count = ");
 	player_send_int(player, bank->market_material);
-	player_send_string(player, "*        1 item price >= $");
+	player_send_string(player, "#        1 item price >= $ ");
 	player_send_int(player, bank->market_material_price);
-	player_send_string(player, "* product count  = ");
+	player_send_string(player, "# product count  = ");
 	player_send_int(player, bank->market_product);
-	player_send_string(player, "*        1 item price <= $");
+	player_send_string(player, "#        1 item price <= $ ");
 	player_send_int(player, bank->market_product_price);
 }
 
@@ -393,13 +393,17 @@ char **session_handle_packline(const char *line)
     size = word_count((char*)line);
     packline = malloc((size+1)*sizeof(char*));
     packline[size] = NULL;
-
+	
+	/*TODO wtf? first command is unknown*/
+	/* DEBUG */	printf("\nline:[%s]\n", line);
     strcpy(temp, line);
+	/* DEBUG */	printf("temp:[%s]\n", temp);
     for (word = strtok(temp, sep);
         word;
         word = strtok(NULL, sep))
 	{
 		packline[i] = word;
+	/* DEBUG */	printf("word:[%s]\n\n", word);
 		i++;
 	}
     /* DEBUG */ //packline_print(packline);
@@ -424,6 +428,8 @@ int handler_command_1(struct session *player, char **cmd)
 		player_send_help(player);
 	} else {
 		player_send_string(player, msg_warn);
+		player_send_string(player, cmd[0]);
+		player_send_string(player, "\n");
 		return 0;
 	}
 	return 1;
@@ -501,7 +507,9 @@ void session_handle_command(struct session *sess, const char *line)
 	/* DEBUG */ //printf("PLAYER[%i]:", sess->number);
 	/* DEBUG */ //printf(" handle_command: \n\t");
 	/* DEBUG */ //packline_print(cmd);
+	/*TODO*/
 	cmd = session_handle_packline(line);
+	/* DEBUG */ packline_print(cmd);
 	size = packline_size(cmd);
 
 	if (size == 1) {
@@ -675,7 +683,7 @@ void bank_send_news_turn()
 	int i;
 	for (i=0;i < SESS_ARR_SIZE;i++) {
 		if (bank->player[i]) {
-			player_send_string(bank->player[i], "* MONTH ");
+			player_send_string(bank->player[i], "# MONTH ");
 			player_send_int(bank->player[i], bank->turn);
 		}
 	}
@@ -697,12 +705,12 @@ void bank_send_news_finish()
 		if (bank->player[i]) {
 			if (winner != -1) {
 				player_send_string(bank->player[i],
-									"* WINNER - PLAYER ");
+									"# WINNER - PLAYER ");
 				player_send_int(bank->player[i],
 									bank->player[winner]->number);
 			} else {
 				player_send_string(bank->player[i],
-									"* WINNER - NOBODY\n");
+									"# WINNER - NOBODY\n");
 			}
 		}
 	}
@@ -769,7 +777,7 @@ void bank_tax()
 			total += 500*player->product;
 			player->money -= 1000*player->factory;
 			total += 1000*player->factory;
-			player_send_string(player, "* taxes: - $");
+			player_send_string(player, "# taxes: - $ ");
 			player_send_int(player, total);
 		}
 	}
@@ -970,7 +978,7 @@ void bank_handle_auction_buy()
 		}
 	}
 	printf("SORT AUCTION BUY\n");
-	bank_auction_print();
+	//bank_auction_print();
 
 	bank_send_news_string("* ===AUCTION BUY===\n");
 	for (i=0;i<SESS_ARR_SIZE;i++) {
@@ -983,11 +991,11 @@ void bank_handle_auction_buy()
 				bank->market_material -= count;
 				bank->player[sd]->money -= price*count;
 				bank->player[sd]->material += count;
-				bank_send_news_string("* player ");
+				bank_send_news_string("# player ");
 				bank_send_news_int(bank->player[sd]->number);
-				bank_send_news_string("* \tcount:\t");
+				bank_send_news_string("# \tcount:\t");
 				bank_send_news_int(count);
-				bank_send_news_string("* \tprice:\t- $");
+				bank_send_news_string("# \tprice:\t- $");
 				bank_send_news_int(price);
 				bank_send_news_string("* \ttotal price:\t- $");
 				bank_send_news_int(price*count);
@@ -1013,7 +1021,7 @@ void bank_handle_auction_sell()
 		}
 	}
 	printf("SORT AUCTION SELL\n");
-	bank_auction_print();
+	//bank_auction_print();
 
 	bank_send_news_string("* ===AUCTION SELL===\n");
 	for (i=0;i<SESS_ARR_SIZE;i++) {
@@ -1026,11 +1034,11 @@ void bank_handle_auction_sell()
 				bank->market_product -= count;
 				bank->player[sd]->money += price*count;
 				bank->player[sd]->product -= count;
-				bank_send_news_string("* player ");
+				bank_send_news_string("# player ");
 				bank_send_news_int(bank->player[sd]->number);
-				bank_send_news_string("* \tcount:\t");
+				bank_send_news_string("# \tcount:\t");
 				bank_send_news_int(count);
-				bank_send_news_string("* \tprice:\t+ $");
+				bank_send_news_string("# \tprice:\t+ $");
 				bank_send_news_int(price);
 				bank_send_news_string("* \ttotal price:\t+ $");
 				bank_send_news_int(price*count);
@@ -1089,7 +1097,7 @@ void bank_setup(struct server_stat *serv, int max_player)
 	bank->build = NULL;
 	
 	bank_auction_delete();
-	bank_auction_print();
+	//bank_auction_print();
 
 	bank_audit();
 }
@@ -1210,6 +1218,9 @@ int main(int argc, char **argv)
 	//struct bank_stat bank;
 	int port, max_player;
 	char *endptr;
+
+
+	/* DEBUG */	packline_print(argv);
 
 	if (argc != 3) {
         printf("Usage: ./server <port> <number of players>\n");
