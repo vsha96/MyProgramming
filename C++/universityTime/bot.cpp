@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 class Player {
 	int number;
@@ -32,15 +33,15 @@ class Game {
 	~Game() {}; //TODO
 };
 
-char cmdt[] = "test";
-char cmd1[] = "me";
-char cmd2[] = "player";
-char cmd3[] = "market";
+char cmdt[] = "test\n";
+char cmd1[] = "me\n";
+char cmd2[] = "player\n";
+char cmd3[] = "market\n";
 char cmd4[] = "build";
 char cmd5[] = "prod";
 char cmd6[] = "buy";
 char cmd7[] = "sell";
-char cmde[] = "turn"; 
+char cmde[] = "turn\n"; 
 
 class Bot: Player {
 	int sd;
@@ -85,7 +86,11 @@ bool Bot::BotConnect(char *address, char *str_port) {
 		printf("error: unable to connect\n");
 		return false;
 	}
-	printf("connection is established!\n");
+	/*
+	int flags = fcntl(sd, F_GETFL);
+	fcntl(sd, F_SETFL, flags | O_NONBLOCK);
+	*/
+	printf("###connection is established!\n");
 
 	// send recv?
 	//this is bulshit
@@ -110,19 +115,8 @@ void Bot::Say(char *s) {
     	int i;
     	for (i=0; s[i]; i++);
     	write(sd, s, i);
-		printf("### I said [%s]", s);
+		printf("### I said: %s", s);
 	}
-
-//we need SD!
-// may be BOT must be an object with methods
-/*
-void bot_msg() {
-	char c;
-	while((c = getchar()) != EOF) {
-		write
-	}
-}
-*/
 
 int main(int argc, char **argv) {
 	Bot robbie;
@@ -140,8 +134,12 @@ int main(int argc, char **argv) {
 		printf("err: unable to connect\n");
 	}
 
+	/*AND NOW WE'RE TALKING*/
 	robbie.ShowSD();
+	sleep(1);
 	robbie.Say(cmdt);
+	robbie.Say(cmdt);
+	robbie.Say(cmde);
 	robbie.Say(cmde);
 	
 	for(;;) { sleep(1); }

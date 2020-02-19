@@ -429,7 +429,7 @@ int handler_command_1(struct session *player, char **cmd)
 	} else {
 		player_send_string(player, msg_warn);
 		player_send_string(player, cmd[0]);
-		player_send_string(player, "\n");
+		player_send_string(player, "\n\n");
 		return 0;
 	}
 	return 1;
@@ -509,7 +509,7 @@ void session_handle_command(struct session *sess, const char *line)
 	/* DEBUG */ //packline_print(cmd);
 	/*TODO*/
 	cmd = session_handle_packline(line);
-	/* DEBUG */ packline_print(cmd);
+	/* DEBUG */ //packline_print(cmd);
 	size = packline_size(cmd);
 
 	if (size == 1) {
