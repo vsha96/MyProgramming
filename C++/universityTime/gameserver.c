@@ -502,8 +502,6 @@ int handler_command_1(struct session *player, char **cmd)
 		player_send_help(player);
 	} else {
 		player_send_string(player, msg_warn);
-		player_send_string(player, cmd[0]);
-		player_send_string(player, "\n\n");
 		return 0;
 	}
 	return 1;
@@ -581,11 +579,10 @@ void session_handle_command(struct session *sess, const char *line)
 	/* DEBUG */ //printf(" handle_command: \n\t");
 	/* DEBUG */ //packline_print(cmd);
 	cmd = session_handle_packline(line);
-	int i, j, size;
+	int size;
 	size = packline_size(cmd);
 
 	if (size == 1) {
-		printf("size == 1\n");
 		handler_command_1(sess, cmd);
 	} else if (size == 2) {
 		handler_command_2(sess, cmd);
@@ -596,6 +593,7 @@ void session_handle_command(struct session *sess, const char *line)
 			session_send_string(sess, msg_warn);
 	}
 
+	/* DEBUG
 	for (i = 0; cmd[i]; i++) {
 		printf("[");
 		for (j = 0; cmd[i][j]; j++)
@@ -603,6 +601,7 @@ void session_handle_command(struct session *sess, const char *line)
 		printf("]");
 	}
 	printf("\n");
+	*/
 
 	/*DONT TOUCH IT*/
 	free(cmd);
