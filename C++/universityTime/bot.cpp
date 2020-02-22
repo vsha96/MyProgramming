@@ -7,32 +7,32 @@
 #include <fcntl.h>
 
 class Player {
-	int number;
-    int money;
-    int material;
-    int product;
-    int factory; 	
+		int number;
+		int money;
+		int material;
+		int product;
+		int factory; 	
 	public:
-	void SetNum(int n) { number = n; }
-	void SetMon(int m) { money = m; }
-	void SetMat(int m) { material = m; }
-	void SetProd(int p) { product = p; }
-	void SetFac(int f) { factory = f; }
+		void SetNum(int n) { number = n; }
+		void SetMon(int m) { money = m; }
+		void SetMat(int m) { material = m; }
+		void SetProd(int p) { product = p; }
+		void SetFac(int f) { factory = f; }
 	
 };
 
-struct list_player {
-	class Player pl;
-	class Player *next;
-};
-
 class Game {
-	struct list_player *list;
+		struct list_player {
+			class Player pl;
+			class Player *next;
+		};
+		struct list_player *list;
 	public:
-	Game() { list = NULL; };
-	~Game() {}; //TODO
+		Game() { list = NULL; };
+		~Game() {}; //TODO
 };
 
+//remake
 char cmdt[] = "test\n";
 char cmd1[] = "me\n";
 char cmd2[] = "player\n";
@@ -43,24 +43,27 @@ char cmd6[] = "buy";
 char cmd7[] = "sell";
 char cmde[] = "turn\n"; 
 
-class Bot: Player {
-	int sd;
-
+class Bot: public Player {
+		int sd;
 	public:
-	Bot() {
-		SetNum(-1);
-		SetMon(10000);
-		SetMat(4);
-		SetProd(2);
-		SetFac(2);
-	}
-	bool BotConnect(char *address, char *str_port);
-	void ShowSD() { printf("my sd = [%i]\n", sd); }
-	void Say(char *string);
+		Bot() {
+			// link with Game object
+			// dont forget about destructor
+			SetNum(-1);
+			SetMon(10000);
+			SetMat(4);
+			SetProd(2);
+			SetFac(2);
+		}
+		bool BotConnect(char *address, char *str_port);
+		void ShowSD() { printf("my sd = [%i]\n", sd); }
+		void Say(char *string);
+		char *Listen();
 };
 
 //put this shit in module!
-bool Bot::BotConnect(char *address, char *str_port) {
+bool Bot::BotConnect(char *address, char *str_port)
+{
 	struct sockaddr_in addr;
 	int port;
 	char *endptr;
@@ -111,14 +114,22 @@ bool Bot::BotConnect(char *address, char *str_port) {
 	return true;
 }
 
-void Bot::Say(char *s) {
+void Bot::Say(char *s)
+{
     	int i;
     	for (i=0; s[i]; i++);
     	write(sd, s, i);
 		printf("### I said: %s", s);
-	}
+}
 
-int main(int argc, char **argv) {
+char *Bot::Listen()
+{
+	// same thing in serv with memmov and memcopy
+	// use buf
+}
+
+int main(int argc, char **argv)
+{
 	Bot robbie;
 	char *address, *str_port;
 
@@ -136,10 +147,9 @@ int main(int argc, char **argv) {
 
 	/*AND NOW WE'RE TALKING*/
 	robbie.ShowSD();
-	sleep(1);
-	robbie.Say(cmdt);
-	robbie.Say(cmdt);
-	robbie.Say(cmde);
+	robbie.Say(cmd1);
+	robbie.Say("fuck off");
+	robbie.Say("fuck off\n");
 	robbie.Say(cmde);
 	
 	for(;;) { sleep(1); }
