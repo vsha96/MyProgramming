@@ -107,8 +107,6 @@ struct bank_stat {
 };
 
 struct bank_stat *bank;
-
-
 /*void bank_setup(struct server_stat *serv, int max_player);*/
 void bank_audit();
 void bank_send_news_string(char*);
@@ -350,7 +348,8 @@ struct session *session_make_new(int fd, struct sockaddr_in *from)
 }
 
 /*=====support for handle=====*/
-int word_count(char *line)
+/*
+int word_count(const char *line)
 {
 	int size = 0;
 	char temp[INBUFSIZE], *word, *sep = " ";
@@ -361,14 +360,46 @@ int word_count(char *line)
 		size++;
 	return size;
 }
+*/
+
+/* NEW 22.02.2020 */
+int is_it_sep(int c, char *sep)
+{   
+    int i;
+    for (i=0; sep[i]; i++) {
+        if (c == sep[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int word_count(const char *line, char *sep)
+{
+    if (line == NULL) return 0;
+    int i,f=0,len, count=0;
+    for(len=0; line[len]; len++);
+    for (i=0;i<len;i++) {
+        if (!is_it_sep(line[i], sep)) {
+            f = 1;
+        } else {
+            if (f == 1) {
+                count++;
+                f = 0;
+            }
+        }
+    }
+    if (f == 1) { count++; }
+    return count;
+}
+/* ~NEW 22.02.2020 */
 
 void packline_print(char **packline)
 {
 	int i=0;
-	char **temp = packline;
 	printf("packline_print:");
-	while(temp[i]) {
-		printf("[%s]", temp[i]);
+	while(packline[i]) {
+		printf("[%s]", packline[i]);
 		i++;
 	}
 	printf("\n");
@@ -385,35 +416,78 @@ int packline_size(char **packline)
 	return size;
 }
 
+/*
 char **session_handle_packline(const char *line)
 {
 	char **packline;
-    char temp[INBUFSIZE], *word, *sep = " ";
+    char temp[INBUFSIZE], *word, sep[] = " ";
     int i = 0, size;
-    size = word_count((char*)line);
+    size = word_count(line);
     packline = malloc((size+1)*sizeof(char*));
     packline[size] = NULL;
 	
-	/*TODO wtf? first command is unknown*/
-	/* DEBUG */	printf("\nline:[%s]\n", line);
     strcpy(temp, line);
-	/* DEBUG */	printf("temp:[%s]\n", temp);
     for (word = strtok(temp, sep);
         word;
         word = strtok(NULL, sep))
 	{
 		packline[i] = word;
-	/* DEBUG */	printf("word:[%s]\n\n", word);
 		i++;
 	}
-    /* DEBUG */ //packline_print(packline);
     return packline;
 }
+*/
+
+/* NEW 22.02.2020 */
+char **session_handle_packline(const char *line)
+{
+    if (line == NULL) return NULL;
+    char **packline;
+    char *temp, *sep = " ";
+    int i, j, f, len, size = word_count(line, sep);
+    /*copy of line*/
+    for(len=0; line[len]; len++);
+    temp = malloc((len+1)*sizeof(char));
+    for(i=0; i<len+1; i++) temp[i] = line[i];
+    packline = malloc((size+1)*sizeof(char*));
+    packline[size] = NULL;
+    j = 0; f = 0;
+    for (i=0;i<len;i++) {
+        if (!is_it_sep(line[i], sep)) {
+            if (f == 0) {
+                packline[j] = &(temp[i]);
+                j++;
+            }
+            f = 1;
+        } else {
+            temp[i] = 0;
+            if (f) {
+                f = 0;
+            }
+        }
+    }
+	return packline;
+}
+/* ~NEW 22.02.2020 */
+
 /*=====end support for handle=====*/
 
 /*=====COMMAND HANDLERS=====*/
 int handler_command_1(struct session *player, char **cmd)
 {
+	/* DEBUG */
+	/*
+		int i;
+		for (i = 0; cmd[0][i]; i++) {
+			printf("%02x", cmd[0][i]);
+		}
+		printf("%i\n",strcmp("me", cmd[0]));
+		for (i = 0; cmd[0][i]; i++) {
+			printf("%02x", cmd[0][i]);
+		}
+		printf("\n");
+	*/
+	/* DEBUG */
 	if (!strcmp("me", cmd[0])) {
 		player_send_info_about(player, player->number);
 	} else if (!strcmp("player", cmd[0])) {
@@ -503,16 +577,15 @@ int handler_command_3(struct session *player, char **cmd)
 void session_handle_command(struct session *sess, const char *line)
 {
 	char **cmd;
-	int size;
 	/* DEBUG */ //printf("PLAYER[%i]:", sess->number);
 	/* DEBUG */ //printf(" handle_command: \n\t");
 	/* DEBUG */ //packline_print(cmd);
-	/*TODO*/
 	cmd = session_handle_packline(line);
-	/* DEBUG */ //packline_print(cmd);
+	int i, j, size;
 	size = packline_size(cmd);
 
 	if (size == 1) {
+		printf("size == 1\n");
 		handler_command_1(sess, cmd);
 	} else if (size == 2) {
 		handler_command_2(sess, cmd);
@@ -522,6 +595,17 @@ void session_handle_command(struct session *sess, const char *line)
 		if (*cmd)
 			session_send_string(sess, msg_warn);
 	}
+
+	for (i = 0; cmd[i]; i++) {
+		printf("[");
+		for (j = 0; cmd[i][j]; j++)
+			printf("%c", cmd[i][j]);
+		printf("]");
+	}
+	printf("\n");
+
+	/*DONT TOUCH IT*/
+	free(cmd);
 }
 
 void session_fsm_step(struct session *sess, char *line)
@@ -530,6 +614,7 @@ void session_fsm_step(struct session *sess, char *line)
 	{
 		case fsm_wait:
 			session_send_string(sess, "* waiting other players\n");
+			free(line);
 			break;
 		case fsm_command:
 			session_handle_command(sess, line);
@@ -543,6 +628,7 @@ void session_fsm_step(struct session *sess, char *line)
 		/* for game: */
 		case fsm_end_turn:
 			session_send_string(sess, "* waiting other players\n");
+			free(line);
 			break;
 		/* somewhere must be procedure for check 'are all users end?' */
 		case fsm_finish:
@@ -553,7 +639,7 @@ void session_fsm_step(struct session *sess, char *line)
 	}
 }
 
-void session_check_lf(struct session *sess)
+int session_check_lf(struct session *sess)
 {
 	int i, pos = -1;
 	char *line;
@@ -566,25 +652,45 @@ void session_check_lf(struct session *sess)
 		}
 	}
 	if (pos == -1)
-		return;
+		return 0;
 
 	line = malloc(pos+1);
 	memcpy(line, sess->buf, pos);
 	line[pos] = 0;
-	memmove(sess->buf, sess->buf+pos, pos+1);
+	//upd 20.02.2020
+	memmove(sess->buf, sess->buf+pos+1, INBUFSIZE - (pos+1));
 	sess->buf_used -= (pos+1);
 
 	if (line[pos-1] == '\r')
 		line[pos-1] = 0;
 
-	/*DEBUG*/ /*printf("check_lf: [%s]\n", line);*/
+	/*DEBUG*/ printf("check_lf plr[%i]: [%s]\n", sess->number, line);
+	/*DEBUG*/
+	/*
+		printf("\nbuffer %i:[", sess->number);
+		for (i=0; i<sess->buf_used; i++)
+			printf("%c", sess->buf[i]);
+		printf("]\n");
+	*/
+		//printf("\nbuffer %i:[%s]", sess->number, sess->buf);
+	/*DEBUG*/
 	session_fsm_step(sess, line);
+	return 1;
 }
 
 int session_read(struct session *sess)
 {
 	int rr, bufp = sess->buf_used;
 	rr = read(sess->fd, sess->buf + bufp, INBUFSIZE - bufp);
+	/*DEBUG*/
+	/*
+		int i;
+		printf("\nbuffer %i:[", sess->number);
+		for (i=0; i<INBUFSIZE; i++)
+			printf("%c", sess->buf[i]);
+		printf("]\n");
+	*/
+	/*DEBUG*/
 	if (rr < 0)
 	{
 		sess->state = fsm_error;
@@ -595,7 +701,7 @@ int session_read(struct session *sess)
 		sess->state = fsm_close;
 	}
 	sess->buf_used += rr;
-	session_check_lf(sess);
+	while (session_check_lf(sess));
 	if (sess->buf_used >= INBUFSIZE)
 	{
 		session_send_string(sess, "Line too long! Goodbye...\n");
@@ -616,7 +722,6 @@ void session_cleanup(struct session *sess)
 struct server_stat {
 	int ls;
 	struct session **sess_array; /* depends of SESS_ARR_SIZE */
-	/* is game started? than new connection will be 'watcher'*/
 	/* step of the game - ?enum round?*/
 	int sess_array_size;
 };
@@ -725,7 +830,7 @@ void bank_check_count_player()
 				bank->player[i]->state = fsm_command;
 			}
 		}
-		/* DEBUG */ printf("=====GAME START=====\n");
+		printf("=====GAME START=====\n");
 
 		bank_send_news_string("* GAME STARTS\n");
 		bank->turn += 1;
@@ -1171,7 +1276,7 @@ void server_session_close(struct server_stat *serv, int sd)
 int server_run(struct server_stat *serv)
 {
 	fd_set readfds /*writefds*/;
-	int i, ssr, maxfd;
+	int i, ssr, maxfd, res;
 	for(;;)
 	{
 		maxfd = serv->ls;
@@ -1188,15 +1293,18 @@ int server_run(struct server_stat *serv)
 			}
 		}
 
-		if (-1 == select(maxfd+1, &readfds, NULL, NULL, NULL))
+		if (-1 == (res = select(maxfd+1, &readfds, NULL, NULL, NULL)))
 		{
 			perror("select");
 			return 1;
 		}
 
+		if (res < 1)
+			continue;
+
 		if (FD_ISSET(serv->ls, &readfds))
 			server_accept_client(serv);
-			/* make a struct for gamer via global bank */
+			/* make a struct for player via global bank */
 
 		for (i=0; i < serv->sess_array_size; i++)
 		{
@@ -1220,7 +1328,7 @@ int main(int argc, char **argv)
 	char *endptr;
 
 
-	/* DEBUG */	packline_print(argv);
+	/* DEBUG */	//packline_print(argv);
 
 	if (argc != 3) {
         printf("Usage: ./server <port> <number of players>\n");
