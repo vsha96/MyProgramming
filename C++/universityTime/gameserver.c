@@ -1326,7 +1326,6 @@ int main(int argc, char **argv)
 	int port, max_player;
 	char *endptr;
 
-
 	/* DEBUG */	//packline_print(argv);
 
 	if (argc != 3) {
