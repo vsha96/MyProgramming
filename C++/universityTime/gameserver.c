@@ -617,6 +617,7 @@ void session_fsm_step(struct session *sess, char *line)
 			break;
 		case fsm_command:
 			session_handle_command(sess, line);
+			
 
 			bank_audit();
 			bank_check_finish();
