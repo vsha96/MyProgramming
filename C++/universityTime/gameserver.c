@@ -212,7 +212,7 @@ void player_send_info_about(struct session *sess, int tag)
 void player_send_stat(struct session *player)
 {
 	int i;
-	player_send_string(player, "* ===PLAYERS INFO=== \n");
+	player_send_string(player, "* ===PLAYERS INFO===\n");
 	for (i=0;i<SESS_ARR_SIZE;i++) {
 		if (bank->player[i] && 
 			bank->player[i]->number != player->number) {	
@@ -221,7 +221,7 @@ void player_send_stat(struct session *player)
 			player_send_info_about(player, bank->player[i]->number);
 		}
 	}
-	player_send_string(player, "* ===END OF PLAYERS=== \n");
+	player_send_string(player, "* ===END OF PLAYERS===\n");
 }
 
 void player_send_market(struct session *player)
@@ -1085,7 +1085,8 @@ void bank_handle_auction_buy()
 	printf("SORT AUCTION BUY\n");
 	//bank_auction_print();
 
-	bank_send_news_string("* ===AUCTION BUY===\n");
+	bank_send_news_string("* ===AUCTIONS===\n");
+	bank_send_news_string("* ====AUCTION BUY====\n");
 	for (i=0;i<SESS_ARR_SIZE;i++) {
 		buy = bank->auction_buy[i];
 		if (buy->count != 0) {
@@ -1128,7 +1129,7 @@ void bank_handle_auction_sell()
 	printf("SORT AUCTION SELL\n");
 	//bank_auction_print();
 
-	bank_send_news_string("* ===AUCTION SELL===\n");
+	bank_send_news_string("* ====AUCTION SELL====\n");
 	for (i=0;i<SESS_ARR_SIZE;i++) {
 		sell = bank->auction_sell[i];
 		if (sell->count != 0) {
@@ -1150,6 +1151,7 @@ void bank_handle_auction_sell()
 			}
 		}
 	}
+	bank_send_news_string("* ===AUCTIONS===\n");
 }
 
 void bank_auction_print()

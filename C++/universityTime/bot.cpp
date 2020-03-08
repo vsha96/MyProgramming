@@ -5,23 +5,14 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include "botmod.hpp"
+#include "packline.hpp"
+//#include "gamemod.hpp"
 		
-class Game {
-		struct list_player {
-			class Player pl;
-			class Player *next;
-		};
-		struct list_player *list;
-	public:
-		Game() { list = NULL; };
-		~Game() {}; //TODO
-};
-
-
 int main(int argc, char **argv)
 {
-	//Game game;
-	Bot robbie; // <- &game
+	Game game;
+	Game &g = game;
+	Bot robbie(&g); // <- &game
 	
 	char *address, *str_port;
 	if (argc != 3) {
@@ -40,7 +31,9 @@ int main(int argc, char **argv)
 	robbie.ListenUntil("* GAME STARTS");
 	
 	robbie.UpdateStats();
-	robbie.ShowYourStats();
+	//robbie.ShowYourStats();
+	robbie.UpdateMarket();
+	//robbie.ShowMarket();
 
 	robbie.Say("turn\n");
 
