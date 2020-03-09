@@ -29,15 +29,51 @@ Game::Game()
 
 void Game::AddPlayer(int num, int mon, int mat, int prod, int fac)
 {
-	//TODO
+	list_player *p;
+	p = new list_player;
+	p->pl.SetNum(num);
+	p->pl.SetMon(mon);
+	p->pl.SetMat(mat);
+	p->pl.SetProd(prod);
+	p->pl.SetFac(fac);
+	p->next = list;
+	list = p;
 }
 
-void Game::UpdatePlayer()
+void Game::SetPlayer(int num, int mon, int mat, int prod, int fac)
 {
-	//TODO
-	/*
-		update by number
-	*/
+	list_player *temp = list;
+	while(temp) {
+		if((temp->pl.GetNum()) == num) {
+			temp->pl.SetMon(mon);
+			temp->pl.SetMat(mat);
+			temp->pl.SetProd(prod);
+			temp->pl.SetFac(fac);
+		} else {
+			//TODO
+			// я не проверил temp == null для внесения 1ого игрока
+			// и нужно изменить немного цикл
+			// после того как не нашел, добавлять
+			printf("!!!!!!!!!!!!!!!!!!!!!\n");
+			AddPlayer(num, mon, mat, prod, fac);
+		}
+	}
+}
+
+void Game::ShowPlayer()
+{
+	list_player *temp = list;
+	Player p;
+	printf("### Show player list:\n");
+	while(temp) {
+		p = temp->pl;
+		printf("### Num: \t\t%i\n", p.GetNum());
+		printf("###\tMon: \t%i\n", p.GetMon());
+		printf("###\tMat: \t%i\n", p.GetMat());
+		printf("###\tProd:\t%i\n", p.GetProd());
+		printf("###\tFac: \t%i\n", p.GetFac());
+		temp = temp->next;
+	}
 }
 
 void Game::SetMarket(int l, int m, int mp, int p, int pp) 
@@ -59,7 +95,9 @@ void Game::ShowMarket()
 
 Game::~Game() {}; //TODO
 
-
+// ===========================================================
+// ===========================================================
+// ===========================================================
 
 Bot::Bot(Game *g)
 {
@@ -174,26 +212,45 @@ void Bot::UpdateMarket()
 		delete[] line;
 	}
 
-	(*game).SetMarket(n[0],n[1],n[2],n[3],n[4]);
+	game->SetMarket(n[0],n[1],n[2],n[3],n[4]);
 
 	for(i=0; i<5; i++) {
 		delete[] ppline[i];
 	}
 }
 
+void Bot::SetPlayer(int num, int mon, int mat, int prod, int fac)
+{
+	game->SetPlayer(num, mon, mat, prod, fac);
+}
+void Bot::ShowPlayer()
+{
+	game->ShowPlayer();
+}
+
 void Bot::UpdatePlayer()
 {
+	char **ppline[5], *line, sep[] = " $#:=><\t\n", *endptr;
+	int i, n[5];
 
-	/*
-	line = ListenStr();
-	while line != "===END OF PLAYERS=== "
+	Say("player\n");
 
-		extract parametrs
-	game->UpdatePlayer(by number)
-	*/
-	
-	
-	game->UpdatePlayer();
+	line = ListenStr(); delete line;
+	while(strcmp((line = ListenStr()),"* ===END OF PLAYERS===")) {
+		delete line;
+		for(i=0; i<5; i++) {
+			line = ListenStr();
+			ppline[i] = make_packline(line, sep);
+			n[i] = strtol(ppline[i][1], &endptr, 10);
+			packline_print(ppline[i]);
+			delete line;
+		}
+		game->SetPlayer(n[0], n[1], n[2], n[3], n[4]);
+		for(i=0; i<5; i++) {
+			delete ppline[i];
+		}
+	}
+	delete line;
 }
 
 char *Bot::ListenStr()

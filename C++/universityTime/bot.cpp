@@ -11,8 +11,7 @@
 int main(int argc, char **argv)
 {
 	Game game;
-	Game &g = game;
-	Bot robbie(&g); // <- &game
+	Bot robbie(&game); // <- &game
 	
 	char *address, *str_port;
 	if (argc != 3) {
@@ -30,14 +29,17 @@ int main(int argc, char **argv)
 	/*AND NOW WE'RE TALKING*/
 	robbie.ListenUntil("* GAME STARTS");
 	
-	robbie.UpdateStats();
-	//robbie.ShowYourStats();
-	robbie.UpdateMarket();
-	//robbie.ShowMarket();
+	//for(;;)
+		robbie.UpdateStats();
+		//robbie.ShowYourStats();
+		robbie.UpdateMarket();
 
-	robbie.Say("turn\n");
+		robbie.UpdatePlayer();
+		game.ShowPlayer();
 
-
+		robbie.Say("turn\n");
+		//actions after turn
+	
 	
 	for(;;) { sleep(1); }
 }

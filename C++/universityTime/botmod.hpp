@@ -25,7 +25,7 @@ class Player {
 class Game {
         struct list_player {
             class Player pl; 
-            class Player *next;
+            struct list_player *next;
         };  
         struct list_player *list;
         //market info
@@ -37,7 +37,8 @@ class Game {
     public:
         Game();
 		void AddPlayer(int num, int mon, int mat, int prod, int fac);
-		void UpdatePlayer();
+		void SetPlayer(int num, int mon, int mat, int prod, int fac);
+		void ShowPlayer();
         void SetMarket(int l, int m, int mp, int p, int pp);
 		void ShowMarket();
         ~Game();
@@ -57,6 +58,8 @@ class Bot: public Player {
 		void Say(const char *string);
 		void UpdateStats();
 		void UpdateMarket();
+		void SetPlayer(int num, int mon, int mat, int prod, int fac);
+		void ShowPlayer();
 		void UpdatePlayer();
 		char *ListenStr();
 		void ListenUntil(const char *string);
