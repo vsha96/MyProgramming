@@ -22,26 +22,50 @@ class Player {
 		int GetFac();
 };
 
+class Game {
+        struct list_player {
+            class Player pl; 
+            struct list_player *next;
+        };  
+        struct list_player *list;
+        //market info
+        int level;
+        int material;
+        int material_price;
+        int product;
+        int product_price;
+    public:
+        Game();
+		void AddPlayer(int num, int mon, int mat, int prod, int fac);
+		void SetPlayer(int num, int mon, int mat, int prod, int fac);
+		void ShowPlayer();
+        void SetMarket(int l, int m, int mp, int p, int pp);
+		void ShowMarket();
+        ~Game();
+};
+
 class Bot: public Player {
 		int sd;
 		int buf_used;
 		char buf[INBUFSIZE];
+		Game *game;
 	public:
-		Bot();
+		Bot(Game *g);
 		bool BotConnect(char *address, char *str_port);
 		void ShowSD();
 		void ShowYourStats();
+		void ShowMarket();
 		void Say(const char *string);
 		void UpdateStats();
+		void UpdateMarket();
+		void SetPlayer(int num, int mon, int mat, int prod, int fac);
+		void ShowPlayer();
+		void UpdatePlayer();
 		char *ListenStr();
 		void ListenUntil(const char *string);
+		void ListenUntilPart(const char *string);
+		void EndTurn();
+		~Bot(); //TODO maybe it's not necessary
 };
 
-
-int is_it_sep(int c, const char *sep);
-int word_count(const char *line, const char *sep);
-void packline_print(char **packline);
-int packline_size(char **packline);
-void packline_free(const char **packline);
-char **make_packline(const char *line, const char *sep);
 #endif

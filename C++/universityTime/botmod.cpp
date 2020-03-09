@@ -6,6 +6,8 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include "botmod.hpp"
+#include "packline.hpp"
+//#include "gamemod.hpp"
 
 void Player::SetNum(int n) { number = n; }
 void Player::SetMon(int m) { money = m; }
@@ -18,8 +20,96 @@ int Player::GetMat() { return material; }
 int Player::GetProd() { return product; }
 int Player::GetFac() { return factory; }
 
+Game::Game()
+{
+    list = NULL; level = -13;
+	material = -13; material_price = -13;
+	product = -13; product_price = -13;
+};
 
-Bot::Bot()
+void Game::AddPlayer(int num, int mon, int mat, int prod, int fac)
+{
+	list_player *p;
+	p = new list_player;
+	p->pl.SetNum(num);
+	p->pl.SetMon(mon);
+	p->pl.SetMat(mat);
+	p->pl.SetProd(prod);
+	p->pl.SetFac(fac);
+	p->next = list;
+	list = p;
+}
+
+void Game::SetPlayer(int num, int mon, int mat, int prod, int fac)
+{
+	list_player *temp = list;
+	if (!temp) {
+		AddPlayer(num, mon, mat, prod, fac);
+		return;
+	}
+
+	while(temp) {
+		if((temp->pl.GetNum()) == num) {
+			temp->pl.SetMon(mon);
+			temp->pl.SetMat(mat);
+			temp->pl.SetProd(prod);
+			temp->pl.SetFac(fac);
+			break;
+		}
+		temp = temp->next;
+	}
+	if (!temp)
+		AddPlayer(num, mon, mat, prod, fac);
+}
+
+void Game::ShowPlayer()
+{
+	list_player *temp = list;
+	Player p;
+	printf("### Show player list:\n");
+	while(temp) {
+		p = temp->pl;
+		printf("### Num: \t\t%i\n", p.GetNum());
+		printf("###\tMon: \t%i\n", p.GetMon());
+		printf("###\tMat: \t%i\n", p.GetMat());
+		printf("###\tProd:\t%i\n", p.GetProd());
+		printf("###\tFac: \t%i\n", p.GetFac());
+		temp = temp->next;
+	}
+}
+
+void Game::SetMarket(int l, int m, int mp, int p, int pp) 
+{
+    level = l;
+    material = m; material_price = mp; 
+    product = p; product_price = pp; 
+}
+
+void Game::ShowMarket()
+{
+	printf("### Market:\n");
+	printf("###\tLevel:\t\t%i\n", level);
+	printf("###\tMaterial: \t%i\n", material);
+	printf("###\t\t\t%i $\n", material_price);
+	printf("###\tProduction: \t%i\n", product);
+	printf("###\t\t\t%i $\n", product_price);
+}
+
+Game::~Game()
+{
+	list_player *target, *temp = list;
+	while(temp) {
+		target = temp;
+		temp = temp->next;
+		delete target;
+	}
+}
+
+// ===========================================================
+// ===========================================================
+// ===========================================================
+
+Bot::Bot(Game *g)
 {
 	buf_used = 0;
 	for (int i=0; i<INBUFSIZE; i++) {
@@ -30,6 +120,8 @@ Bot::Bot()
 	SetMat(4);
 	SetProd(2);
 	SetFac(2);
+	game = g;
+	game->SetMarket(-1,0,0,0,0);
 }
 
 bool Bot::BotConnect(char *address, char *str_port)
@@ -74,6 +166,11 @@ void Bot::ShowYourStats()
 	printf("###\tFac: \t%i\n", GetFac());
 }
 
+void Bot::ShowMarket()
+{
+	game->ShowMarket();
+}
+
 void Bot::Say(const char *s)
 {
     	int len;
@@ -100,10 +197,69 @@ void Bot::UpdateStats()
 	SetMat(n[2]);
 	SetProd(n[3]);
 	SetFac(n[4]);
+
 	for(i=0; i<5; i++) {
 		delete[] ppline[i];
 	}
-	//number = strtol(pline[1], NULL, 10);
+}
+
+void Bot::UpdateMarket()
+{
+	char **ppline[5], *line, sep[] = " $#:=><\t\n", *endptr;
+	int i, n[5];
+	Say("market\n");
+
+	for(i=0; i<5; i++) {
+		line = ListenStr();
+		ppline[i] = make_packline(line, sep);
+		if (i == 2 || i == 4) {
+			n[i] = strtol(ppline[i][3], &endptr, 10);
+		} else {
+			n[i] = strtol(ppline[i][2], &endptr, 10);
+		}
+		//packline_print(ppline[i]);
+		delete[] line;
+	}
+
+	game->SetMarket(n[0],n[1],n[2],n[3],n[4]);
+
+	for(i=0; i<5; i++) {
+		delete[] ppline[i];
+	}
+}
+
+void Bot::SetPlayer(int num, int mon, int mat, int prod, int fac)
+{
+	game->SetPlayer(num, mon, mat, prod, fac);
+}
+void Bot::ShowPlayer()
+{
+	game->ShowPlayer();
+}
+
+void Bot::UpdatePlayer()
+{
+	char **ppline[5], *line, sep[] = " $#:=><\t\n", *endptr;
+	int i, n[5];
+
+	Say("player\n");
+
+	line = ListenStr(); delete line;
+	while(strcmp((line = ListenStr()),"* ===END OF PLAYERS===")) {
+		delete line;
+		for(i=0; i<5; i++) {
+			line = ListenStr();
+			ppline[i] = make_packline(line, sep);
+			n[i] = strtol(ppline[i][1], &endptr, 10);
+			//packline_print(ppline[i]);
+			delete line;
+		}
+		game->SetPlayer(n[0], n[1], n[2], n[3], n[4]);
+		for(i=0; i<5; i++) {
+			delete ppline[i];
+		}
+	}
+	delete line;
 }
 
 char *Bot::ListenStr()
@@ -144,7 +300,6 @@ char *Bot::ListenStr()
 		} else {
 			break;
 		}
-		//sleep(1); //oh nooo..
 	}
 
 	line = new char[size+1];
@@ -177,101 +332,31 @@ void Bot::ListenUntil(const char *target)
 	}
 }
 
-// ===========================================================
-// ===========================================================
-// ===========================================================
-// ===========================================================
-// ===========================================================
-// ===========================================================
-// ===========================================================
-// ===========================================================
-
-
-//PACKLINE
-int is_it_sep(int c, const char *sep)
-{   
-    int i;
-    for (i=0; sep[i]; i++) {
-        if (c == sep[i]) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-int word_count(const char *line, const char *sep)
+void Bot::ListenUntilPart(const char *string)
 {
-    if (line == NULL) return 0;
-    int i,f=0,len, count=0;
-    for(len=0; line[len]; len++);
-    for (i=0;i<len;i++) {
-        if (!is_it_sep(line[i], sep)) {
-            f = 1;
-        } else {
-            if (f == 1) {
-                count++;
-                f = 0;
-            }
-        }
-    }
-    if (f == 1) { count++; }
-    return count;
-}
-
-void packline_print(char **packline)
-{
-	if (packline) {
-		printf("packline_print:");
-		for (int i=0; packline[i]; i++) {
-			printf("[%s]", packline[i]);
+	char *temp;
+	int n;
+	for(n=0;string[n];n++);
+	for(;;) {
+		temp = ListenStr();
+		if (!strncmp(temp, string, n)) {
+			delete temp;
+			break;
 		}
-		printf("\n");
-	} else {
-		printf("packline_print:NULL\n");
+		delete temp;
 	}
 }
 
-int packline_size(const char **packline)
+void Bot::EndTurn()
 {
-	int size;
-	for(size=0;packline[size];size++);
-	return size;
+	Say("turn\n");
+	//TODO
+	/*
+		THERE WE MAY COLLECT INFO ABOUT AUCTIONS
+	*/
+	ListenUntilPart("# MONTH");
 }
 
-void packline_free(const char **packline)
-{
-	int size = packline_size(packline);
-	for(int i=0; i<size; i++)
-		delete[] packline[i];
-}
+Bot::~Bot() {}
 
-char **make_packline(const char *line, const char *sep)
-{
-    if (line == NULL) return NULL;
-    char **packline;
-    char *temp;
-    int i, j, f, len, size = word_count(line, sep);
-    /*copy of line*/
-    for(len=0; line[len]; len++);
-	temp = new char[len+1];
-    for(i=0; i<len+1; i++) temp[i] = line[i];
-	packline = new char*[size+1];
-
-    packline[size] = NULL;
-    j = 0; f = 0;
-    for (i=0;i<len;i++) {
-        if (!is_it_sep(line[i], sep)) {
-            if (f == 0) {
-                packline[j] = &(temp[i]);
-                j++;
-            }
-            f = 1;
-        } else {
-            temp[i] = 0;
-            if (f) {
-                f = 0;
-            }
-        }
-    }
-	return packline;
-}
+// ===========================================================
