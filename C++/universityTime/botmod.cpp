@@ -20,11 +20,11 @@ int Player::GetMat() { return material; }
 int Player::GetProd() { return product; }
 int Player::GetFac() { return factory; }
 
-
-
 Game::Game()
 {
-    list = NULL;
+    list = NULL; level = -13;
+	material = -13; material_price = -13;
+	product = -13; product_price = -13;
 };
 
 void Game::AddPlayer(int num, int mon, int mat, int prod, int fac)
@@ -43,21 +43,23 @@ void Game::AddPlayer(int num, int mon, int mat, int prod, int fac)
 void Game::SetPlayer(int num, int mon, int mat, int prod, int fac)
 {
 	list_player *temp = list;
+	if (!temp) {
+		AddPlayer(num, mon, mat, prod, fac);
+		return;
+	}
+
 	while(temp) {
 		if((temp->pl.GetNum()) == num) {
 			temp->pl.SetMon(mon);
 			temp->pl.SetMat(mat);
 			temp->pl.SetProd(prod);
 			temp->pl.SetFac(fac);
-		} else {
-			//TODO
-			// я не проверил temp == null для внесения 1ого игрока
-			// и нужно изменить немного цикл
-			// после того как не нашел, добавлять
-			printf("!!!!!!!!!!!!!!!!!!!!!\n");
-			AddPlayer(num, mon, mat, prod, fac);
+			break;
 		}
+		temp = temp->next;
 	}
+	if (!temp)
+		AddPlayer(num, mon, mat, prod, fac);
 }
 
 void Game::ShowPlayer()
@@ -93,7 +95,15 @@ void Game::ShowMarket()
 	printf("###\t\t\t%i $\n", product_price);
 }
 
-Game::~Game() {}; //TODO
+Game::~Game()
+{
+	list_player *target, *temp = list;
+	while(temp) {
+		target = temp;
+		temp = temp->next;
+		delete target;
+	}
+}
 
 // ===========================================================
 // ===========================================================
@@ -191,7 +201,6 @@ void Bot::UpdateStats()
 	for(i=0; i<5; i++) {
 		delete[] ppline[i];
 	}
-	//number = strtol(pline[1], NULL, 10);
 }
 
 void Bot::UpdateMarket()
@@ -242,7 +251,7 @@ void Bot::UpdatePlayer()
 			line = ListenStr();
 			ppline[i] = make_packline(line, sep);
 			n[i] = strtol(ppline[i][1], &endptr, 10);
-			packline_print(ppline[i]);
+			//packline_print(ppline[i]);
 			delete line;
 		}
 		game->SetPlayer(n[0], n[1], n[2], n[3], n[4]);
@@ -322,5 +331,32 @@ void Bot::ListenUntil(const char *target)
 		delete[] temp;
 	}
 }
+
+void Bot::ListenUntilPart(const char *string)
+{
+	char *temp;
+	int n;
+	for(n=0;string[n];n++);
+	for(;;) {
+		temp = ListenStr();
+		if (!strncmp(temp, string, n)) {
+			delete temp;
+			break;
+		}
+		delete temp;
+	}
+}
+
+void Bot::EndTurn()
+{
+	Say("turn\n");
+	//TODO
+	/*
+		THERE WE MAY COLLECT INFO ABOUT AUCTIONS
+	*/
+	ListenUntilPart("# MONTH");
+}
+
+Bot::~Bot() {}
 
 // ===========================================================

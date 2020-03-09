@@ -63,6 +63,9 @@ class Bot: public Player {
 		void UpdatePlayer();
 		char *ListenStr();
 		void ListenUntil(const char *string);
+		void ListenUntilPart(const char *string);
+		void EndTurn();
+		~Bot(); //TODO maybe it's not necessary
 };
 
 #endif

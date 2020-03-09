@@ -28,18 +28,16 @@ int main(int argc, char **argv)
 
 	/*AND NOW WE'RE TALKING*/
 	robbie.ListenUntil("* GAME STARTS");
-	
-	//for(;;)
+	for(;;)
+	{
 		robbie.UpdateStats();
-		//robbie.ShowYourStats();
+		robbie.ShowYourStats();
 		robbie.UpdateMarket();
-
+		game.ShowMarket();
 		robbie.UpdatePlayer();
 		game.ShowPlayer();
+		
+		robbie.EndTurn();
+	}
 
-		robbie.Say("turn\n");
-		//actions after turn
-	
-	
-	for(;;) { sleep(1); }
 }
