@@ -57,6 +57,7 @@ int packline_size(const char **packline)
 void packline_free(const char **packline)
 {
 	int size = packline_size(packline);
+	//printf("PACKLINE SIZE %i\n", size);
 	for(int i=0; i<size; i++)
 		delete[] packline[i];
 }
@@ -69,7 +70,11 @@ char **make_packline(const char *line, const char *sep)
     int i, j, f, len, size = word_count(line, sep);
     /*copy of line*/
     for(len=0; line[len]; len++);
-	temp = new char[len+1];
+	temp = new char[len+1]; //TODO
+	/* TODO
+			 ^
+		here | we have some leaks if first chars are separators
+	*/
     for(i=0; i<len+1; i++) temp[i] = line[i];
 	packline = new char*[size+1];
 
