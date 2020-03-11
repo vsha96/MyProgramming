@@ -22,9 +22,10 @@ int Player::GetFac() { return factory; }
 
 Game::Game()
 {
-    list = NULL; level = -13;
-	material = -13; material_price = -13;
-	product = -13; product_price = -13;
+	Market &m = market;
+    list = NULL; m.level = -13;
+	m.material = -13; m.material_price = -13;
+	m.product = -13; m.product_price = -13;
 };
 
 void Game::AddPlayer(int num, int mon, int mat, int prod, int fac)
@@ -80,19 +81,26 @@ void Game::ShowPlayer()
 
 void Game::SetMarket(int l, int m, int mp, int p, int pp) 
 {
-    level = l;
-    material = m; material_price = mp; 
-    product = p; product_price = pp; 
+	Market &gm = market;
+    gm.level = l;
+    gm.material = m; gm.material_price = mp; 
+    gm.product = p; gm.product_price = pp; 
 }
 
 void Game::ShowMarket()
 {
+	Market &m = market;
 	printf("### Market:\n");
-	printf("###\tLevel:\t\t%i\n", level);
-	printf("###\tMaterial: \t%i\n", material);
-	printf("###\t\t\t%i $\n", material_price);
-	printf("###\tProduction: \t%i\n", product);
-	printf("###\t\t\t%i $\n", product_price);
+	printf("###\tLevel:\t\t%i\n", m.level);
+	printf("###\tMaterial: \t%i\n", m.material);
+	printf("###\t\t\t%i $\n", m.material_price);
+	printf("###\tProduction: \t%i\n", m.product);
+	printf("###\t\t\t%i $\n", m.product_price);
+}
+
+Market Game::GetMarket()
+{
+	return market;
 }
 
 Game::~Game()
@@ -156,7 +164,7 @@ bool Bot::BotConnect(char *address, char *str_port)
 	return true;
 }
 
-void Bot::ShowYourStats()
+void Bot::ShowStats()
 {
 	printf("### Show stats:\n");
 	printf("###\tNum: \t%i\n", GetNum());
@@ -176,7 +184,7 @@ void Bot::Say(const char *s)
     	int len;
     	for (len=0; s[len]; len++);
     	write(sd, s, len);
-		printf("###SAY:%s", s);
+		printf("%s", s);
 }
 
 void Bot::UpdateStats()
@@ -347,9 +355,50 @@ void Bot::ListenUntilPart(const char *string)
 	}
 }
 
+void Bot::Produce(int count)
+{
+	char *line, s[256];
+	sprintf(s, "%i", count);
+	Say("prod "); Say(s); Say("\n");
+	line = ListenStr();
+	delete line;
+}
+
+void Bot::Buy(int count, int price)
+{
+	char *line, s[2][256];
+	sprintf(s[0], "%i", count);
+	sprintf(s[1], "%i", price);
+	Say("buy "); Say(s[0]); Say(" "); Say(s[1]); Say("\n");
+	line = ListenStr();
+	delete line;
+}
+
+void Bot::Sell(int count, int price)
+{
+	char *line, s[2][256];
+	sprintf(s[0], "%i", count);
+	sprintf(s[1], "%i", price);
+	Say("sell "); Say(s[0]); Say(" "); Say(s[1]); Say("\n");
+	line = ListenStr();
+	delete line;
+}
+
+void Bot::Build(int count)
+{
+	char *line, s[256];
+	sprintf(s, "%i", count);
+	Say("build "); Say(s); Say("\n");
+	line = ListenStr();
+	delete line;
+}
+
 void Bot::EndTurn()
 {
+	char *line;
 	Say("turn\n");
+	line = ListenStr();
+	delete line;
 	//TODO
 	/*
 		THERE WE MAY COLLECT INFO ABOUT AUCTIONS

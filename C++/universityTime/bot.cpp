@@ -28,15 +28,21 @@ int main(int argc, char **argv)
 
 	/*AND NOW WE'RE TALKING*/
 	robbie.ListenUntil("* GAME STARTS");
+	Market m;
 	for(;;)
 	{
 		robbie.UpdateStats();
-		robbie.ShowYourStats();
+		robbie.ShowStats();
 		robbie.UpdateMarket();
-		game.ShowMarket();
 		robbie.UpdatePlayer();
-		game.ShowPlayer();
-		
+		//game.ShowPlayer();
+		m = game.GetMarket();
+
+		game.ShowMarket();
+		robbie.Sell(robbie.GetProd(), m.product_price);
+		robbie.Buy(m.material, m.material_price);
+		robbie.Produce(robbie.GetFac());
+
 		robbie.EndTurn();
 	}
 
