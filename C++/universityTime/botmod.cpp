@@ -23,6 +23,8 @@ int Player::GetFac() { return factory; }
 Game::Game()
 {
 	Market &m = market;
+	turn = 1;
+	state = game_playing;
     list = NULL; m.level = -13;
 	m.material = -13; m.material_price = -13;
 	m.product = -13; m.product_price = -13;
@@ -103,6 +105,16 @@ Market Game::GetMarket()
 	return market;
 }
 
+void Game::Turn()
+{
+	turn++;
+}
+
+void Game::End()
+{
+	state = game_end;
+}
+
 Game::~Game()
 {
 	list_player *target, *temp = list;
@@ -130,6 +142,7 @@ Bot::Bot(Game *g)
 	SetFac(2);
 	game = g;
 	game->SetMarket(-1,0,0,0,0);
+	state = bot_playing;
 }
 
 bool Bot::BotConnect(char *address, char *str_port)
@@ -189,7 +202,7 @@ void Bot::Say(const char *s)
 
 void Bot::UpdateStats()
 {
-	char **ppline[5], *line, sep[] = " $#:\t\n", *endptr;
+	char **ppline[5], *line, sep[] = " *$#:\t\n", *endptr;
 	int i, n[5];
 	Say("me\n");
 
@@ -213,7 +226,7 @@ void Bot::UpdateStats()
 
 void Bot::UpdateMarket()
 {
-	char **ppline[5], *line, sep[] = " $#:=><\t\n", *endptr;
+	char **ppline[5], *line, sep[] = " $*#:=><\t\n", *endptr;
 	int i, n[5];
 	Say("market\n");
 
@@ -247,7 +260,7 @@ void Bot::ShowPlayer()
 
 void Bot::UpdatePlayer()
 {
-	char **ppline[5], *line, sep[] = " $#:=><\t\n", *endptr;
+	char **ppline[5], *line, sep[] = " $*#:=><\t\n", *endptr;
 	int i, n[5];
 
 	Say("player\n");
@@ -274,27 +287,6 @@ char *Bot::ListenStr()
 {
 	char *line;
 	int i, rr, size = -1;
-	/*
-	for (attempt=0;attempt<2;attempt++) {
-		for (i=0; i < buf_used; i++) {
-			if (buf[i] == '\n') {
-				size = i;
-				break;
-			}
-		}
-		if (size == -1) {
-			if (attempt == 0) {
-				rr = read(sd, buf + buf_used, INBUFSIZE-buf_used);
-				buf_used += rr;
-				//printf("!!!!!!!!!!!!!!!attempt to read rr=%i\n\n",rr);
-				//printf("BUFFER[%s]\n\n", buf);
-			} else {
-				//printf("!!!!!!!!!!!!!!!\n");
-				return NULL;
-			}
-		}
-	}
-	*/
 	for(;;) {
 		for (i=0; i < buf_used; i++) {
 			if (buf[i] == '\n') {
@@ -315,15 +307,8 @@ char *Bot::ListenStr()
 	line[size] = 0;
 	memmove(buf, buf+size+1, INBUFSIZE - (size+1));
 	buf_used -= (size+1);
-	//DEBUG
-		//printf("\nBUF[%s]\n\n", buf);
-	/*
-	for (i=0; i<size; i++)
-		printf("%c", line[i]);
-	printf("\n");
-	*/
-	printf("%s\n", line);
-		//printf("BUFUSED after = %i\n", buf_used);
+	
+	//printf("%s\n", line);
 	return line;
 }
 
@@ -347,6 +332,17 @@ void Bot::ListenUntilPart(const char *string)
 	for(n=0;string[n];n++);
 	for(;;) {
 		temp = ListenStr();
+
+		if (!strcmp(temp, "* you lost")) {
+			state = bot_loser;
+		}
+
+		if (!strcmp(temp, "* GAME OVER")) {
+			game->End();
+			if (state != bot_loser)
+				state = bot_winner;
+		}
+
 		if (!strncmp(temp, string, n)) {
 			delete temp;
 			break;
@@ -393,19 +389,29 @@ void Bot::Build(int count)
 	delete line;
 }
 
-void Bot::EndTurn()
+bool Bot::EndTurn()
 {
 	char *line;
 	Say("turn\n");
+	game->Turn();
 	line = ListenStr();
 	delete line;
 	//TODO
 	/*
 		THERE WE MAY COLLECT INFO ABOUT AUCTIONS
 	*/
-	ListenUntilPart("# MONTH");
+	ListenUntilPart("* MONTH");
+	printf("### =====MONTH=====\n");
+	switch(state) {
+		case bot_playing:
+			return false;
+		case bot_winner:
+			printf("### I won >_<\n");
+			return true;
+		case bot_loser:
+			printf("### sorry master, I failed you...\n");
+			return true;
+	}
 }
 
 Bot::~Bot() {}
-
-// ===========================================================
