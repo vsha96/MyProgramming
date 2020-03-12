@@ -24,10 +24,12 @@ Game::Game()
 {
 	Market &m = market;
 	turn = 1;
+	player_count = 0;
 	state = game_playing;
     list = NULL; m.level = -13;
 	m.material = -13; m.material_price = -13;
 	m.product = -13; m.product_price = -13;
+	auc_buy = NULL; auc_sell = NULL;
 };
 
 void Game::AddPlayer(int num, int mon, int mat, int prod, int fac)
@@ -105,9 +107,88 @@ Market Game::GetMarket()
 	return market;
 }
 
+void Game::InitAuc(int size)
+{
+	int i;
+	player_count = size+1;
+	if (!auc_buy)
+		auc_buy = new Auction[player_count];
+	if (!auc_sell)
+		auc_sell = new Auction[player_count];
+	for(i=0; i<player_count; i++) {
+		auc_buy[i].number = i+1;
+		auc_buy[i].count = 0;
+		auc_buy[i].price = 0;
+		auc_buy[i].total_price = 0;
+		auc_sell[i].number = i+1;
+		auc_sell[i].count = 0;
+		auc_sell[i].price = 0;
+		auc_sell[i].total_price = 0;
+	}
+}
+
+void Game::ShowAuc()
+{
+	int i;
+	Auction *a;
+	printf("### GAME::SHOW AUC:\n");
+	printf("### =====AUC BUY=====\n");
+	for (i=0; i<player_count; i++) {
+		a = &(auc_buy[i]);
+		printf("### player\t\t%i\n", a->number);
+		printf("### \tcount\t\t%i\n", a->count);
+		printf("### \tprice\t\t%i\n", a->price);
+		printf("### \ttotal price\t%i\n", a->total_price);
+	}
+	printf("### =====AUC SELL=====\n");
+	for (i=0; i<player_count; i++) {
+		a = &(auc_sell[i]);
+		printf("### player\t\t%i\n", a->number);
+		printf("### \tcount\t\t%i\n", a->count);
+		printf("### \tprice\t\t%i\n", a->price);
+		printf("### \ttotal price\t%i\n", a->total_price);
+	}
+}
+
+void Game::AddAucBuy(int num, int c, int p, int tp)
+{
+	int i = num-1;
+	auc_buy[i].count = c;
+	auc_buy[i].price = p;
+	auc_buy[i].total_price = tp;
+}
+
+void Game::AddAucSell(int num, int c, int p, int tp)
+{
+	int i = num-1;
+	auc_sell[i].count = c;
+	auc_sell[i].price = p;
+	auc_sell[i].total_price = tp;
+}
+
+void Game::DelAuc()
+{
+	if (auc_buy)
+		delete[] auc_buy;
+	if (auc_sell)
+		delete[] auc_sell;
+}
+
 void Game::Turn()
 {
+	int i;
 	turn++;
+
+	for(i=0; i<player_count; i++) {
+		auc_buy[i].number = i+1;
+		auc_buy[i].count = 0;
+		auc_buy[i].price = 0;
+		auc_buy[i].total_price = 0;
+		auc_sell[i].number = i+1;
+		auc_sell[i].count = 0;
+		auc_sell[i].price = 0;
+		auc_sell[i].total_price = 0;
+	}
 }
 
 void Game::End()
@@ -123,6 +204,10 @@ Game::~Game()
 		temp = temp->next;
 		delete target;
 	}
+	if (auc_buy)
+		delete[] auc_buy;
+	if (auc_sell)
+		delete[] auc_sell;
 }
 
 // ===========================================================
@@ -249,6 +334,43 @@ void Bot::UpdateMarket()
 	}
 }
 
+void Bot::UpdateAuctions()
+{
+	//TODO
+	int i, n[4];
+	char **ppline[4], *line, sep[] = " $*:=><-+\t\n", *endptr;
+	bool handle_sell = false, handle_exit = false;
+	ListenUntil("* ====AUCTION BUY====");
+	for(;;) {
+		for (i=0;i<4;i++) {
+			line = ListenStr();
+			if (!strcmp(line,"* ====AUCTION SELL====")) {
+				handle_sell = true;
+				break;
+			}
+			if (!strcmp(line,"* ===AUCTIONS===")) {
+				handle_exit = true;
+				break;
+			}
+			ppline[i] = make_packline(line, sep);
+			if (i != 3) {
+				n[i] = strtol(ppline[i][1], &endptr, 10);
+			} else {
+				n[i] = strtol(ppline[i][2], &endptr, 10);
+			}
+			packline_print(ppline[i]);
+			delete line;
+		}
+		if (handle_exit)
+			break;
+		if (!handle_sell) {
+			game->AddAucBuy(n[0], n[1], n[2], n[3]);
+		} else {
+			game->AddAucSell(n[0], n[1], n[2], n[3]);
+		}
+	}
+}
+
 void Bot::SetPlayer(int num, int mon, int mat, int prod, int fac)
 {
 	game->SetPlayer(num, mon, mat, prod, fac);
@@ -261,13 +383,14 @@ void Bot::ShowPlayer()
 void Bot::UpdatePlayer()
 {
 	char **ppline[5], *line, sep[] = " $*#:=><\t\n", *endptr;
-	int i, n[5];
+	int i, n[5], player_count = 0;
 
 	Say("player\n");
 
 	line = ListenStr(); delete line;
 	while(strcmp((line = ListenStr()),"* ===END OF PLAYERS===")) {
 		delete line;
+		player_count++;
 		for(i=0; i<5; i++) {
 			line = ListenStr();
 			ppline[i] = make_packline(line, sep);
@@ -281,6 +404,7 @@ void Bot::UpdatePlayer()
 		}
 	}
 	delete line;
+	game->InitAuc(player_count);
 }
 
 char *Bot::ListenStr()
@@ -393,13 +517,14 @@ bool Bot::EndTurn()
 {
 	char *line;
 	Say("turn\n");
-	game->Turn();
 	line = ListenStr();
 	delete line;
+
 	//TODO
-	/*
-		THERE WE MAY COLLECT INFO ABOUT AUCTIONS
-	*/
+	game->Turn();
+	UpdateAuctions();
+	game->ShowAuc();
+
 	ListenUntilPart("* MONTH");
 	printf("### =====MONTH=====\n");
 	switch(state) {

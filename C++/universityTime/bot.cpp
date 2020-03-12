@@ -34,8 +34,9 @@ int main(int argc, char **argv)
 		robbie.UpdateStats();
 		//robbie.ShowStats();
 		robbie.UpdateMarket();
-		robbie.UpdatePlayer();
-
+		robbie.UpdatePlayer(); // from this we have mas for auc by players
+		//TODO
+		//UpdateAuctions
 		//game.ShowPlayer();
 		//game.ShowMarket();
 
