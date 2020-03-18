@@ -53,9 +53,10 @@ class Game {
 		Market market;
 		Auction *auc_buy;
 		Auction *auc_sell;
+		void AddPlayer(int num, int mon, int mat, int prod, int fac);
+		void DelAuc();
     public:
         Game();
-		void AddPlayer(int num, int mon, int mat, int prod, int fac);//pri
 		void SetPlayer(int num, int mon, int mat, int prod, int fac);
 		void ShowPlayer();
         void SetMarket(int l, int m, int mp, int p, int pp);
@@ -65,10 +66,8 @@ class Game {
 		void ShowAuc();
 		void AddAucBuy(int num, int count, int price, int total_price);
 		void AddAucSell(int num, int count, int price, int total_price);
-		void DelAuc();
 		void Turn();
 		void End();
-		//int GetMarket ...
         ~Game();
 };
 
@@ -83,23 +82,23 @@ class Bot: public Player {
 		char buf[INBUFSIZE];
 		Game *game;
 		State state;
-
+		char *ListenStr();
+		void ListenUntil(const char *string);
+		void ListenUntilPart(const char *string);
+		void Say(const char *string);
 		void UpdateAuctions();
+		void SetPlayer(int num, int mon, int mat, int prod, int fac);
 	public:
 		Bot(Game *g);
 		bool BotConnect(char *address, char *str_port);
+		void WaitGameStart();
 		void ShowSD();
 		void ShowStats();
 		void ShowMarket();
-		void Say(const char *string); //private TODO
 		void UpdateStats();
 		void UpdateMarket();
-		void SetPlayer(int num, int mon, int mat, int prod, int fac);
 		void ShowPlayer();
 		void UpdatePlayer();
-		char *ListenStr();
-		void ListenUntil(const char *string); //TODO
-		void ListenUntilPart(const char *string); //TODO
 		void Produce(int count);
 		void Buy(int count, int price);
 		void Sell(int count, int price);

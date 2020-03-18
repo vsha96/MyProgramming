@@ -26,21 +26,20 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	robbie.WaitGameStart();
 	/*AND NOW WE'RE TALKING*/
-	robbie.ListenUntil("* GAME STARTS");
 	Market m;
 	for(;;)
 	{
 		robbie.UpdateStats();
 		//robbie.ShowStats();
 		robbie.UpdateMarket();
-		robbie.UpdatePlayer(); // from this we have mas for auc by players
-		//TODO
-		//UpdateAuctions
+		robbie.UpdatePlayer();
 		//game.ShowPlayer();
 		//game.ShowMarket();
 
 		m = game.GetMarket();
+
 		robbie.Sell(robbie.GetProd(), m.product_price);
 		robbie.Buy(m.material, m.material_price);
 		robbie.Produce(robbie.GetFac());

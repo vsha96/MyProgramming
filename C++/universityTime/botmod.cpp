@@ -168,10 +168,14 @@ void Game::AddAucSell(int num, int c, int p, int tp)
 
 void Game::DelAuc()
 {
-	if (auc_buy)
+	if (auc_buy) {
 		delete[] auc_buy;
-	if (auc_sell)
+		auc_buy = NULL;
+	}
+	if (auc_sell) {
 		delete[] auc_sell;
+		auc_buy = NULL;
+	}
 }
 
 void Game::Turn()
@@ -204,10 +208,7 @@ Game::~Game()
 		temp = temp->next;
 		delete target;
 	}
-	if (auc_buy)
-		delete[] auc_buy;
-	if (auc_sell)
-		delete[] auc_sell;
+	//DelAuc() ??
 }
 
 // ===========================================================
@@ -260,6 +261,11 @@ bool Bot::BotConnect(char *address, char *str_port)
 	printf("###connection is established!\n");
 
 	return true;
+}
+
+void Bot::WaitGameStart()
+{
+	ListenUntil("* GAME STARTS");
 }
 
 void Bot::ShowStats()
@@ -358,7 +364,7 @@ void Bot::UpdateAuctions()
 			} else {
 				n[i] = strtol(ppline[i][2], &endptr, 10);
 			}
-			packline_print(ppline[i]);
+			//packline_print(ppline[i]);
 			delete line;
 		}
 		if (handle_exit)
@@ -523,7 +529,7 @@ bool Bot::EndTurn()
 	//TODO
 	game->Turn();
 	UpdateAuctions();
-	game->ShowAuc();
+	//game->ShowAuc();
 
 	ListenUntilPart("* MONTH");
 	printf("### =====MONTH=====\n");
