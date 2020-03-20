@@ -5,30 +5,28 @@
 #define LEX_STR_LIMIT 128
 
 
-char M1[] = {
-	'\t',
-	'\n',
-	' '
+char key_word[][16] = {
+	"if",
+	"for",
+	"print",
+	"buy",
+	"sell",
+	"prod",
+	"build",
+	"turn"
 };
 
-char Op1[] = {
-	'>',
-	'<',
-	'=',
-	'!'
+enum Type {
+	t_kword,
+	t_word,
+	t_oper,
+	t_string,
+	t_number
 };
-
-char R[] = {
-	'(',
-	')',
-	'{',
-	'}'
-};
-
 
 struct List {
 	char *str;
-	//Type type;
+	Type type;
 	int line_num;
 	List *next;
 };
@@ -40,11 +38,7 @@ class Lex {
 			fsm_oper,
 			fsm_string
 		};
-		enum Type {
-			t_word,
-			t_oper,
-			t_string
-		};
+		
 		
 		
 		char buf[LEX_STR_LIMIT];
@@ -57,7 +51,7 @@ class Lex {
 		void Add(char *str, Type type, int line_number);
 	public:
 		Lex();
-		List Analyze(char *file);
+		List *Analyze(char *file);
 };
 
 Lex::Lex() {
@@ -70,14 +64,32 @@ Lex::Lex() {
 	end = NULL;
 }
 
+List *Lex::Analyze(char *file)
+{
+	FILE *f;
+	char c;
+	if (!(f = fopen(file, "r"))) {
+		perror(file);
+		return NULL;
+	}
+	while((c = getc(f)) != EOF) {
+		printf("%c", c);
+	}
+	return NULL; //TODO
+}
 
-int main() {
+
+int main(int argc, char **argv) {
 	
-	/*
-	printf("%c\n", Op1[0]);
-	printf("%c\n", Op1[1]);
-	printf("%lu\n", sizeof(Op1));
-	*/
+	Lex lex;
+	List *lex_list;
+	
+	if (argc != 2) {
+		printf("usage: ./lex [file_name]\n");
+		return 1;
+	}
+
+	lex_list = lex.Analyze(argv[1]);
 	
 	
 	
