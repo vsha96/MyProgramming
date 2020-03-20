@@ -15,11 +15,11 @@ class Player {
 		void SetMat(int m);
 		void SetProd(int p);
 		void SetFac(int f);
-		int GetNum();
-		int GetMon();
-		int GetMat();
-		int GetProd();
-		int GetFac();
+		int GetNum() const;
+		int GetMon() const;
+		int GetMat() const;
+		int GetProd() const;
+		int GetFac() const;
 };
 
 struct Market {
@@ -58,12 +58,12 @@ class Game {
     public:
         Game();
 		void SetPlayer(int num, int mon, int mat, int prod, int fac);
-		void ShowPlayer();
+		void ShowPlayer() const;
         void SetMarket(int l, int m, int mp, int p, int pp);
-		void ShowMarket();
+		void ShowMarket() const;
 		Market GetMarket();
 		void InitAuc(int size);
-		void ShowAuc();
+		void ShowAuc() const;
 		void AddAucBuy(int num, int count, int price, int total_price);
 		void AddAucSell(int num, int count, int price, int total_price);
 		void Turn();
@@ -92,12 +92,12 @@ class Bot: public Player {
 		Bot(Game *g);
 		bool BotConnect(char *address, char *str_port);
 		void WaitGameStart();
-		void ShowSD();
-		void ShowStats();
-		void ShowMarket();
+		void ShowSD() const;
+		void ShowStats() const;
+		void ShowMarket() const;
 		void UpdateStats();
 		void UpdateMarket();
-		void ShowPlayer();
+		void ShowPlayer() const;
 		void UpdatePlayer();
 		void Produce(int count);
 		void Buy(int count, int price);

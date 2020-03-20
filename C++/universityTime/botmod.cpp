@@ -14,11 +14,11 @@ void Player::SetMon(int m) { money = m; }
 void Player::SetMat(int m) { material = m; }
 void Player::SetProd(int p) { product = p; }
 void Player::SetFac(int f) { factory = f; }
-int Player::GetNum() { return number; }
-int Player::GetMon() { return money; }
-int Player::GetMat() { return material; }
-int Player::GetProd() { return product; }
-int Player::GetFac() { return factory; }
+int Player::GetNum() const { return number; }
+int Player::GetMon() const { return money; }
+int Player::GetMat() const { return material; }
+int Player::GetProd() const { return product; }
+int Player::GetFac() const { return factory; }
 
 Game::Game()
 {
@@ -67,7 +67,7 @@ void Game::SetPlayer(int num, int mon, int mat, int prod, int fac)
 		AddPlayer(num, mon, mat, prod, fac);
 }
 
-void Game::ShowPlayer()
+void Game::ShowPlayer() const
 {
 	list_player *temp = list;
 	Player p;
@@ -91,9 +91,9 @@ void Game::SetMarket(int l, int m, int mp, int p, int pp)
     gm.product = p; gm.product_price = pp; 
 }
 
-void Game::ShowMarket()
+void Game::ShowMarket() const
 {
-	Market &m = market;
+	const Market &m = market;
 	printf("### Market:\n");
 	printf("###\tLevel:\t\t%i\n", m.level);
 	printf("###\tMaterial: \t%i\n", m.material);
@@ -127,10 +127,10 @@ void Game::InitAuc(int size)
 	}
 }
 
-void Game::ShowAuc()
+void Game::ShowAuc() const
 {
 	int i;
-	Auction *a;
+	const Auction *a;
 	printf("### GAME::SHOW AUC:\n");
 	printf("### =====AUC BUY=====\n");
 	for (i=0; i<player_count; i++) {
@@ -268,7 +268,7 @@ void Bot::WaitGameStart()
 	ListenUntil("* GAME STARTS");
 }
 
-void Bot::ShowStats()
+void Bot::ShowStats() const
 {
 	printf("### Show stats:\n");
 	printf("###\tNum: \t%i\n", GetNum());
@@ -278,7 +278,7 @@ void Bot::ShowStats()
 	printf("###\tFac: \t%i\n", GetFac());
 }
 
-void Bot::ShowMarket()
+void Bot::ShowMarket() const
 {
 	game->ShowMarket();
 }
@@ -381,7 +381,7 @@ void Bot::SetPlayer(int num, int mon, int mat, int prod, int fac)
 {
 	game->SetPlayer(num, mon, mat, prod, fac);
 }
-void Bot::ShowPlayer()
+void Bot::ShowPlayer() const
 {
 	game->ShowPlayer();
 }
