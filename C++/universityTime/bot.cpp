@@ -26,8 +26,8 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	robbie.WaitGameStart();
 	/*AND NOW WE'RE TALKING*/
-	robbie.ListenUntil("* GAME STARTS");
 	Market m;
 	for(;;)
 	{
@@ -35,11 +35,11 @@ int main(int argc, char **argv)
 		//robbie.ShowStats();
 		robbie.UpdateMarket();
 		robbie.UpdatePlayer();
-
 		//game.ShowPlayer();
 		//game.ShowMarket();
 
 		m = game.GetMarket();
+
 		robbie.Sell(robbie.GetProd(), m.product_price);
 		robbie.Buy(m.material, m.material_price);
 		robbie.Produce(robbie.GetFac());

@@ -15,11 +15,11 @@ class Player {
 		void SetMat(int m);
 		void SetProd(int p);
 		void SetFac(int f);
-		int GetNum();
-		int GetMon();
-		int GetMat();
-		int GetProd();
-		int GetFac();
+		int GetNum() const;
+		int GetMon() const;
+		int GetMat() const;
+		int GetProd() const;
+		int GetFac() const;
 };
 
 struct Market {
@@ -31,58 +31,74 @@ struct Market {
 };
 
 class Game {
-    struct list_player {
-        class Player pl; 
-        struct list_player *next;
-    };
-	enum GameState {
-		game_playing,
-		game_end
-	};
+		struct list_player {
+			class Player pl; 
+			struct list_player *next;
+		};
+		struct Auction {
+			int number;
+			int count;
+			int price;
+			int total_price;
+			Auction *next;
+		};
+		enum GameState {
+			game_playing,
+			game_end
+		};
 		int turn;
+		int player_count;
 		GameState state;
 		list_player *list;
 		Market market;
+		Auction *auc_buy;
+		Auction *auc_sell;
+		void AddPlayer(int num, int mon, int mat, int prod, int fac);
+		void DelAuc();
     public:
         Game();
-		void AddPlayer(int num, int mon, int mat, int prod, int fac);
 		void SetPlayer(int num, int mon, int mat, int prod, int fac);
-		void ShowPlayer();
+		void ShowPlayer() const;
         void SetMarket(int l, int m, int mp, int p, int pp);
-		void ShowMarket();
+		void ShowMarket() const;
 		Market GetMarket();
+		void InitAuc(int size);
+		void ShowAuc() const;
+		void AddAucBuy(int num, int count, int price, int total_price);
+		void AddAucSell(int num, int count, int price, int total_price);
 		void Turn();
 		void End();
-		//int GetMarket ...
         ~Game();
 };
 
 class Bot: public Player {
-	enum State {
-		bot_playing,
-		bot_winner,
-		bot_loser
-	};
+		enum State {
+			bot_playing,
+			bot_winner,
+			bot_loser
+		};
 		int sd;
 		int buf_used;
 		char buf[INBUFSIZE];
 		Game *game;
 		State state;
-	public:
-		Bot(Game *g);
-		bool BotConnect(char *address, char *str_port);
-		void ShowSD();
-		void ShowStats();
-		void ShowMarket();
-		void Say(const char *string);
-		void UpdateStats();
-		void UpdateMarket();
-		void SetPlayer(int num, int mon, int mat, int prod, int fac);
-		void ShowPlayer();
-		void UpdatePlayer();
 		char *ListenStr();
 		void ListenUntil(const char *string);
 		void ListenUntilPart(const char *string);
+		void Say(const char *string);
+		void UpdateAuctions();
+		void SetPlayer(int num, int mon, int mat, int prod, int fac);
+	public:
+		Bot(Game *g);
+		bool BotConnect(char *address, char *str_port);
+		void WaitGameStart();
+		void ShowSD() const;
+		void ShowStats() const;
+		void ShowMarket() const;
+		void UpdateStats();
+		void UpdateMarket();
+		void ShowPlayer() const;
+		void UpdatePlayer();
 		void Produce(int count);
 		void Buy(int count, int price);
 		void Sell(int count, int price);
