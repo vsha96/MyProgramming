@@ -49,7 +49,8 @@ class Lex {
 			fsm_start,
 			fsm_word,
 			fsm_oper,
-			fsm_string
+			fsm_string,
+			fsm_number
 		};
 		
 		char buf[LEX_STR_LIMIT];
@@ -63,14 +64,14 @@ class Lex {
 		
 		bool BufPut(char c);
 		//если никуда не подошло - то не может быть такого символа
-		bool MachineSep(char c); //TODO
+		bool Separator(char c);
 		bool MachineWord(char c);
-		bool MachineOper(char c); //TODO
-		bool MachineString(char c); //TODO
-		bool MachineAlgebra(char c); //TODO
-		bool MachineNumber(char c); //TODO
+		bool MachineOper(char c);
+		bool MachineString(char c);
+		bool MachineAlgebra(char c);
+		bool MachineNumber(char c);
 		//before state change we make new word
-		void Add(const char *str, Type type); //TODO
+		void Add(const char *str, Type type);
 		bool Pop();
 		void Step(char c);
 	public:
@@ -90,7 +91,7 @@ bool Lex::BufPut(char c)
 	return true;
 }
 
-bool Lex::MachineSep(char c)
+bool Lex::Separator(char c)
 {
 	if (c == '\n')
 		line_num++;
@@ -117,7 +118,6 @@ bool Lex::MachineWord(char c)
 	}
 }
 
-/*
 bool Lex::MachineOper(char c)
 {
 	if (state == fsm_oper) {
@@ -127,12 +127,50 @@ bool Lex::MachineOper(char c)
 			(c == '>') ||
 			(c == '<') ||
 			(c == '!') ||
-			(c == '=')
+			(c == '=');
 	} else {
-		
+		printf("ERR: MachineOper: wrong state change\n");
+		return false;
 	}
 }
-*/
+
+bool Lex::MachineString(char c)
+{
+	if (state == fsm_start) {
+		return (c == '"');
+	} else if (state == fsm_string) {
+		return (c == '"');
+	} else {
+		printf("ERR: MachineOper: wrong state change\n");
+		return false;
+	}
+}
+
+bool Lex::MachineAlgebra(char c)
+{
+	if (state == fsm_start) {
+		return
+			(c == '+') ||
+			(c == '-') ||
+			(c == '*') ||
+			(c == '/');
+	} else {
+		printf("ERR: MachineAlgebra: wrong state change\n");
+		return false;
+	}
+}
+
+bool Lex::MachineNumber(char c)
+{
+	if ((state == fsm_start) || (state == fsm_number)) {
+		return
+			(c >= '0' && c <= '9');
+	} else {
+		printf("ERR: MachineNumber: wrong state change\n");
+		return false;
+	}
+
+}
 
 void Lex::Add(const char *str, Type type)
 {
@@ -142,17 +180,22 @@ void Lex::Add(const char *str, Type type)
 		return;
 	}
 	
-	temp = &list;
+	if (end)
+		temp = &(end->next);
+	else
+		temp = &list;
 	//printf("i am still alive\n");
+	/*
 	while (*temp) {
 			temp = &((*temp)->next);
 	}
+	*/
 	(*temp) = new List;
 	(*temp)->str = str;
 	(*temp)->type = type;
 	(*temp)->line_num = line_num;
 	(*temp)->next = NULL;
-	end = *temp; //we may boost via it; need rewrite
+	end = *temp;
 }
 
 bool Lex::Pop()
@@ -170,9 +213,7 @@ bool Lex::Pop()
 	switch(state)
 	{
 		case fsm_start:
-			t = t_kword;
-			printf("WARN: Pop: takes when fsm_start\n");
-			break;
+			return true;
 		case fsm_word:
 			t = t_word;
 			break;
@@ -181,6 +222,9 @@ bool Lex::Pop()
 			break;
 		case fsm_string:
 			t = t_string;
+			break;
+		case fsm_number:
+			t = t_number;
 			break;
 	}
 	Add(line, t);
@@ -202,6 +246,8 @@ void Lex::Step(char c)
 		case fsm_oper:
 			break;
 		case fsm_string:
+			break;
+		case fsm_number:
 			break;
 	}
 }
@@ -228,20 +274,12 @@ List *Lex::Analyze(char *f)
 	while((c = getc(file)) != EOF) {
 		Step(c);
 		//printf("%c", c);
-		if (!BufPut(c)) //delete list
-			return NULL;
+		//if (!BufPut(c)) //delete list
+		//	return NULL;
 	}
-	Pop();
 	ListPrint();
-	/*
-	line = new char[buf_used+1];
-	memcpy(line, buf, buf_used);
-	line[buf_used] = 0;
-	buf_used = 0;
-	*/
-
 	fclose(file);
-	return NULL; //TODO
+	return list;
 }
 
 void Lex::ListPrint()
