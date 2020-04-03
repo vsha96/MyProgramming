@@ -34,7 +34,8 @@ enum Type {
 	t_word,
 	t_oper,
 	t_string,
-	t_number
+	t_number,
+	t_algebra
 };
 
 struct List {
@@ -50,7 +51,8 @@ class Lex {
 			fsm_word,
 			fsm_oper,
 			fsm_string,
-			fsm_number
+			fsm_number,
+			fsm_algebra
 		};
 		
 		char buf[LEX_STR_LIMIT];
@@ -70,7 +72,6 @@ class Lex {
 		bool MachineString(char c);
 		bool MachineAlgebra(char c);
 		bool MachineNumber(char c);
-		//before state change we make new word
 		void Add(const char *str, Type type);
 		bool Pop();
 		void Step(char c);
@@ -153,7 +154,8 @@ bool Lex::MachineAlgebra(char c)
 			(c == '+') ||
 			(c == '-') ||
 			(c == '*') ||
-			(c == '/');
+			(c == '/') ||
+			(c == '%');
 	} else {
 		printf("ERR: MachineAlgebra: wrong state change\n");
 		return false;
@@ -226,6 +228,9 @@ bool Lex::Pop()
 		case fsm_number:
 			t = t_number;
 			break;
+		case fsm_algebra:
+			t = t_algebra;
+			break;
 	}
 	Add(line, t);
 	return true;
@@ -236,18 +241,24 @@ void Lex::Step(char c)
 	switch(state)
 	{
 		case fsm_start: //TODO
+			Pop();
 			if (MachineWord(c)) {
-				
+				BufPut(c);
+				state = fsm_word;
 			}
 				
 			break;
 		case fsm_word:
+			if (MachineWord(c))
+				BufPut(c);
 			break;
 		case fsm_oper:
 			break;
 		case fsm_string:
 			break;
 		case fsm_number:
+			break;
+		case fsm_algebra:
 			break;
 	}
 }
@@ -305,6 +316,9 @@ void Lex::ListPrint()
 					break;
 				case t_number:
 					printf("t_number");
+					break;
+				case t_algebra:
+					printf("t_algebra");
 					break;
 			};
 			printf("\t%i\t[%s]\n", t->line_num, t->str);
