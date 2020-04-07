@@ -7,7 +7,7 @@
 #define LEX_STR_LIMIT 128
 #endif
 
-char key_word[][16] = {
+char KEY_WORD[][16] = {
 	"if",
 	"then",
 	"for",
@@ -18,16 +18,8 @@ char key_word[][16] = {
 	"sell",
 	"prod",
 	"build",
-	"turn"
-};
-
-char separator[] = {
-	' ',
-	',',
-	';',
-	'\t',
-	'\n'
-};
+	"turn",
+}; //keep in mind count if you change this
 
 enum Type {
 	t_kword,
@@ -35,7 +27,8 @@ enum Type {
 	t_oper,
 	t_string,
 	t_number,
-	t_algebra
+	t_algebra,
+	t_sep
 };
 
 struct List {
@@ -52,7 +45,8 @@ class Lex {
 			fsm_oper,
 			fsm_string,
 			fsm_number,
-			fsm_algebra
+			fsm_algebra,
+			fsm_sep
 		};
 		
 		char buf[LEX_STR_LIMIT];
@@ -66,15 +60,19 @@ class Lex {
 		
 		bool BufPut(char c);
 		//если никуда не подошло - то не может быть такого символа
+		bool IsSeparator(char c);
 		bool Separator(char c);
+		void CheckKeyWord();
 		bool MachineWord(char c);
 		bool MachineOper(char c);
 		bool MachineString(char c);
-		bool MachineAlgebra(char c);
 		bool MachineNumber(char c);
+		bool MachineAlgebra(char c);
+		bool MachineSep(char c);
 		void Add(const char *str, Type type);
 		bool Pop();
-		void Step(char c);
+		bool Step(char c);
+		void ShowState();
 	public:
 		Lex();
 		List *Analyze(char *file);
@@ -89,7 +87,16 @@ bool Lex::BufPut(char c)
 	}
 	buf[buf_used] = c;
 	buf_used++;
+	/*DEBUG*/ //printf("[%c] was putted\n", c);
 	return true;
+}
+
+bool Lex::IsSeparator(char c)
+{
+	return
+		(c == '\t') ||
+		(c == '\n') ||
+		(c == ' ');
 }
 
 bool Lex::Separator(char c)
@@ -102,17 +109,28 @@ bool Lex::Separator(char c)
 		(c == ' ');
 }
 
+void Lex::CheckKeyWord()
+{
+	if (!end)
+		return;
+	for (int i=0; KEY_WORD[i] && i<11; i++)
+		if (!strcmp(KEY_WORD[i], end->str)) {
+			end->type = t_kword;
+		}
+}
+
 bool Lex::MachineWord(char c)
 {
-	if (state == fsm_word) {
+	if (state == fsm_start) {
 		return 
-			(c > 'a' && c < 'z') ||
-			(c > 'A' && c < 'Z') ||
-			(c > '0' && c < '9');
-	} else if (state == fsm_start) {
+			(c >= 'a' && c <= 'z') ||
+			(c >= 'A' && c <= 'Z');
+	} else if (state == fsm_word) {
 		return 
-			(c > 'a' && c < 'z') ||
-			(c > 'A' && c < 'Z');
+			(c >= 'a' && c <= 'z') ||
+			(c >= 'A' && c <= 'Z') ||
+			(c >= '0' && c <= '9') ||
+			(c == '_');
 	} else {
 		printf("ERR: MachineWord: wrong state change\n");
 		return false;
@@ -140,9 +158,22 @@ bool Lex::MachineString(char c)
 	if (state == fsm_start) {
 		return (c == '"');
 	} else if (state == fsm_string) {
+		if (c == EOF)
+			printf("ERR: MachineString: string literal isn't closed\n");
 		return (c == '"');
 	} else {
 		printf("ERR: MachineOper: wrong state change\n");
+		return false;
+	}
+}
+
+bool Lex::MachineNumber(char c)
+{
+	if ((state == fsm_start) || (state == fsm_number)) {
+		return
+			(c >= '0' && c <= '9');
+	} else {
+		printf("ERR: MachineNumber: wrong state change\n");
 		return false;
 	}
 }
@@ -162,16 +193,22 @@ bool Lex::MachineAlgebra(char c)
 	}
 }
 
-bool Lex::MachineNumber(char c)
+bool Lex::MachineSep(char c)
 {
-	if ((state == fsm_start) || (state == fsm_number)) {
+	if (state == fsm_start) {
 		return
-			(c >= '0' && c <= '9');
+			(c == '(') ||
+			(c == ')') ||
+			(c == '[') ||
+			(c == ']') ||
+			(c == '{') ||
+			(c == '}') ||
+			(c == ';') ||
+			(c == ',');
 	} else {
-		printf("ERR: MachineNumber: wrong state change\n");
+		printf("ERR: MachineAlgebra: wrong state change\n");
 		return false;
 	}
-
 }
 
 void Lex::Add(const char *str, Type type)
@@ -186,12 +223,6 @@ void Lex::Add(const char *str, Type type)
 		temp = &(end->next);
 	else
 		temp = &list;
-	//printf("i am still alive\n");
-	/*
-	while (*temp) {
-			temp = &((*temp)->next);
-	}
-	*/
 	(*temp) = new List;
 	(*temp)->str = str;
 	(*temp)->type = type;
@@ -231,36 +262,126 @@ bool Lex::Pop()
 		case fsm_algebra:
 			t = t_algebra;
 			break;
+		case fsm_sep:
+			t = t_sep;
+			break;
 	}
 	Add(line, t);
+	/*DEBUG*/ //printf("Pop:: poped\n");
 	return true;
 }
 
-void Lex::Step(char c)
+bool Lex::Step(char c)
 {
+	bool change = false;
+	/*DEBUG*/ //printf("\n");
+	/*DEBUG*/ //ShowState();
+	/*DEBUG*/ //printf("[%c]\n", c);
 	switch(state)
 	{
-		case fsm_start: //TODO
-			Pop();
+		case fsm_start:
 			if (MachineWord(c)) {
 				BufPut(c);
 				state = fsm_word;
+			} else if (MachineOper(c)) {
+				BufPut(c);
+				state = fsm_oper;
+			} else if (MachineString(c)) {
+				state = fsm_string;
+			} else if (MachineNumber(c)) {
+				BufPut(c);
+				state = fsm_number;
+			} else if (MachineAlgebra(c)) {
+				BufPut(c);
+				state = fsm_algebra;
+			} else if (MachineSep(c)) {
+				BufPut(c);
+				state = fsm_sep;
+			} else if (!IsSeparator(c) && (c != EOF)) {
+				printf("\nERR: Step: wrong symbol at line %i [%c]\n\n",
+					line_num, c);
+				return false;
 			}
-				
 			break;
 		case fsm_word:
-			if (MachineWord(c))
+			if (MachineWord(c)) {
 				BufPut(c);
+			} else {
+				Pop();
+				CheckKeyWord();
+				change = true;
+			}
 			break;
 		case fsm_oper:
+			if (MachineOper(c)) {
+				BufPut(c);
+			} else {
+				change = true;
+			}
+			Pop();
 			break;
 		case fsm_string:
+			if (!MachineString(c)) {
+				BufPut(c);
+			} else {
+				Pop();
+				state = fsm_start;
+			}
 			break;
 		case fsm_number:
+			if (MachineNumber(c)) {
+				BufPut(c);
+			} else {
+				Pop();
+				change = true;
+			}
 			break;
 		case fsm_algebra:
+		case fsm_sep:
+			Pop();
+			change = true;
 			break;
 	}
+	Separator(c);
+	if (change) {
+		state = fsm_start;
+	}
+	if (change && !IsSeparator(c)) {
+		/*DEBUG*/ //printf("one more step");
+		Step(c);
+	} else if ((state != fsm_string) && IsSeparator(c)) {
+		state = fsm_start;
+	}
+	return true;
+	/*DEBUG*/ //ShowState();
+	/*DEBUG*/ //printf("\n");
+}
+
+void Lex::ShowState()
+{
+	switch (state) {
+		case fsm_start:
+			printf("fsm_start\n");
+			break;
+		case fsm_word:
+			printf("fsm_word\n");
+			break;
+		case fsm_oper:
+			printf("fsm_oper\n");
+			break;
+		case fsm_string:
+			printf("fsm_string\n");
+			break;
+		case fsm_number:
+			printf("fsm_number\n");
+			break;
+		case fsm_algebra:
+			printf("fsm_algebra\n");
+			break;
+		case fsm_sep:
+			printf("fsm_sep\n");
+			break;
+	};
 }
 
 Lex::Lex() {
@@ -282,12 +403,21 @@ List *Lex::Analyze(char *f)
 		perror(f);
 		return NULL;
 	}
+	printf("====================================\n");
 	while((c = getc(file)) != EOF) {
-		Step(c);
-		//printf("%c", c);
+		printf("%c", c);
+		if (!Step(c)) {
+			printf("ERR\n");
+			return NULL;
+		}
 		//if (!BufPut(c)) //delete list
 		//	return NULL;
 	}
+	if (!Step(c)) {
+		printf("ERR\n");
+		return NULL;
+	}
+	printf("====================================\n");
 	ListPrint();
 	fclose(file);
 	return list;
@@ -303,22 +433,25 @@ void Lex::ListPrint()
 		while(t) {
 			switch (t->type) {
 				case t_kword:
-					printf("t_kword");
+					printf("t_kword  ");
 					break;
 				case t_word:
-					printf("t_word  ");
+					printf("t_word   ");
 					break;
 				case t_oper:
-					printf("t_oper  ");
+					printf("t_oper   ");
 					break;
 				case t_string:
-					printf("t_string");
+					printf("t_string ");
 					break;
 				case t_number:
-					printf("t_number");
+					printf("t_number ");
 					break;
 				case t_algebra:
 					printf("t_algebra");
+					break;
+				case t_sep:
+					printf("t_sep    ");
 					break;
 			};
 			printf("\t%i\t[%s]\n", t->line_num, t->str);
@@ -337,9 +470,8 @@ int main(int argc, char **argv) {
 		printf("usage: ./lex [file_name]\n");
 		return 1;
 	}
-
-	lex_list = lex.Analyze(argv[1]);
 	
+	lex_list = lex.Analyze(argv[1]);
 }
 
 
