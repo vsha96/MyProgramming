@@ -128,23 +128,6 @@ void Lex::CheckKeyWord()
 
 bool Lex::MachineWord(char c)
 {
-	/*
-	if (state == fsm_word) {
-		return 
-			(c >= 'a' && c <= 'z') ||
-			(c >= 'A' && c <= 'Z') ||
-			(c >= '0' && c <= '9') ||
-			(c == '_');
-	} else if (state == fsm_start) {
-		return 
-			(c >= 'a' && c <= 'z') ||
-			(c >= 'A' && c <= 'Z');
-	} else {
-		printf("ERR: MachineWord: wrong state change\n");
-		return false;
-	}
-	*/
-
 	if (state == fsm_start) {
 		return 
 			(c >= 'a' && c <= 'z') ||
