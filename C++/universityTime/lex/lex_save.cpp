@@ -71,13 +71,14 @@ class Lex {
 		bool MachineSep(char c);
 		void Add(const char *str, Type type);
 		bool Pop();
-		bool StepStart(char c);
+
 		bool StepWord(char c);
 		bool StepOper(char c);
 		bool StepString(char c);
 		bool StepNumber(char c);
-		//bool StepAlgebra(char c);
-		//bool StepSep(char c);
+		bool StepAlgebra(char c);
+		bool StepSep(char c);
+
 		bool Step(char c);
 		void ShowState();
 	public:
@@ -295,33 +296,6 @@ bool Lex::Pop()
 	return true;
 }
 
-bool Lex::StepStart(char c)
-{
-	if (MachineWord(c)) {
-		BufPut(c);
-		state = fsm_word;
-	} else if (MachineOper(c)) {
-		BufPut(c);
-		state = fsm_oper;
-	} else if (MachineString(c)) {
-		state = fsm_string;
-	} else if (MachineNumber(c)) {
-		BufPut(c);
-		state = fsm_number;
-	} else if (MachineAlgebra(c)) {
-		BufPut(c);
-		state = fsm_algebra;
-	} else if (MachineSep(c)) {
-		BufPut(c);
-		state = fsm_sep;
-	} else if (!IsSeparator(c) && (c != EOF)) {
-		printf("\nERR: Step: wrong symbol at line %i [%c]\n\n",
-			line_num, c);
-		return false;
-	}
-	return true;
-}
-
 bool Lex::StepWord(char c)
 {
 	if (MachineWord(c)) {
@@ -382,20 +356,73 @@ bool Lex::Step(char c)
 	switch(state)
 	{
 		case fsm_start:
-			if (!StepStart(c))
+			if (MachineWord(c)) {
+				BufPut(c);
+				state = fsm_word;
+			} else if (MachineOper(c)) {
+				BufPut(c);
+				state = fsm_oper;
+			} else if (MachineString(c)) {
+				state = fsm_string;
+			} else if (MachineNumber(c)) {
+				BufPut(c);
+				state = fsm_number;
+			} else if (MachineAlgebra(c)) {
+				BufPut(c);
+				state = fsm_algebra;
+			} else if (MachineSep(c)) {
+				BufPut(c);
+				state = fsm_sep;
+			} else if (!IsSeparator(c) && (c != EOF)) {
+				printf("\nERR: Step: wrong symbol at line %i [%c]\n\n",
+					line_num, c);
 				return false;
+			}
 			break;
 		case fsm_word:
 			change = StepWord(c);
+			/*
+			if (MachineWord(c)) {
+				BufPut(c);
+			} else {
+				Pop();
+				CheckKeyWord();
+				change = true;
+			}
+			*/
 			break;
 		case fsm_oper:
 			change = StepOper(c);
+			/*
+			if (MachineOper(c)) {
+				BufPut(c);
+			} else {
+				change = true;
+			}
+			Pop();
+			*/
 			break;
 		case fsm_string:
 			StepString(c);
+			/*
+			if (!MachineString(c)) {
+				BufPut(c);
+			} else {
+				Pop();
+				state = fsm_start;
+			}
+			*/
 			break;
 		case fsm_number:
 			change = StepNumber(c);
+			/*
+			if (MachineNumber(c)) {
+				BufPut(c);
+			} else {
+				Pop();
+				change = true;
+			}
+			*/
 			break;
 		case fsm_algebra:
 		case fsm_sep:
