@@ -15,7 +15,8 @@ char KEY_WORD[][16] = {
 	"sell",
 	"prod",
 	"build",
-	"turn",
+	"turn", 
+	//must we add my_id, player? -> it will be functions, watch p43
 }; //keep in mind count if you change this
 
 bool Lex::BufPut(char c)
@@ -393,7 +394,7 @@ List *Lex::Analyze(char *f)
 		return NULL;
 	}
 	printf("====================================\n");
-	ListPrint();
+	/*DEBUG*/ //ListPrint();
 	fclose(file);
 	return list;
 }

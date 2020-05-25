@@ -11,4 +11,5 @@ int main(int argc, char **argv) {
 	}
 	
 	lex_list = lex.Analyze(argv[1]);
+	lex.ListPrint();
 }

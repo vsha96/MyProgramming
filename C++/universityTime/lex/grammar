@@ -1,0 +1,6 @@
+
+S -> DECL | STAT | COND | CYCLE | INFUN
+INFUN -> //здесь встроенные функции и все такое (p43)
+DECL -> int <t_word> ; | int <t_word> [STAT] ;
+STAT -> 
+COND -> if STAT then S | if STAT then { S } | ...?
