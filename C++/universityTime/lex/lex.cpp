@@ -4,7 +4,7 @@
 #include <string.h>
 #include "lex.hpp"
 
-char KEY_WORD[][16] = {
+const char *KEY_WORD[] = {
 	"if",
 	"then",
 	"for",
@@ -16,8 +16,9 @@ char KEY_WORD[][16] = {
 	"prod",
 	"build",
 	"turn", 
+	NULL
 	//must we add my_id, player? -> it will be functions, watch p43
-}; //keep in mind count if you change this
+};
 
 bool Lex::BufPut(char c)
 {
@@ -53,10 +54,11 @@ void Lex::CheckKeyWord()
 {
 	if (!end)
 		return;
-	for (int i=0; KEY_WORD[i] && i<11; i++)
+	for (int i=0; KEY_WORD[i]; i++) {
 		if (!strcmp(KEY_WORD[i], end->str)) {
 			end->type = t_kword;
 		}
+	}
 }
 
 bool Lex::MachineWord(char c)
