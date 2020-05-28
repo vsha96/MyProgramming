@@ -1,4 +1,5 @@
 #include "lex.hpp"
+#include "syn.hpp"
 
 int main(int argc, char **argv) {
 	
@@ -6,7 +7,7 @@ int main(int argc, char **argv) {
 	List *lex_list;
 	
 	if (argc != 2) {
-		printf("usage: ./lex [file_name]\n");
+		printf("usage: ./main [file_name]\n");
 		return 1;
 	}
 	
