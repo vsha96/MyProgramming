@@ -1,0 +1,22 @@
+===== GRAMMAR 2 =====
+
+	<!-- ### there is small confusion (eof and eps) watch this in {} -->
+BEGIN -> S BEGIN | eof | eps
+
+S -> INFUN ; | DECL ; | <t_word> = STAT ; | if CRIT then { BEGIN } | for <t_word> from STAT to STAT { BEGIN }
+
+INFUN -> <!-- inline functions (only like operands) it is <t_kword> -->
+
+DECL -> int <t_word> | array <t_word> [ STAT ]
+
+CRIT -> STAT OPER STAT
+
+OPER -> > | >= | < | <= | == | !=
+
+	<!-- ### there we must build POLIZ and compute it -->
+STAT -> <t_word> E | <t_kword> E | <t_number> E | INFUN E | ( STAT )
+
+E -> ALG STAT | eps
+
+	<!-- ### it is <t_algebra> -->
+ALG -> + | - | * | / | %

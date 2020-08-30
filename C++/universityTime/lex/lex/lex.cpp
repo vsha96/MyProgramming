@@ -11,33 +11,13 @@ const char *KEY_WORD[] = {
 	"from",
 	"to",
 	"print",
-	//in-game functuions
-		//no parameters
-	"turn",
-	"my_id",
-	"turn",
-	"players",
-	"active_players",
-	"supply",
-	"raw_price",
-	"demand",
-	"production_price",
-		//one param - count
-	"prod",
-	"build",
-		//one param - player's number
-	"money",
-	"raw",
-	"production",
-	"factories",
-	"result_raw_price",
-	"result_prod_bought",
-	"result_prod_price",
-		//two param - count, price
 	"buy",
 	"sell",
-	//end of in-game functuions
+	"prod",
+	"build",
+	"turn", 
 	NULL
+	//must we add my_id, player? -> it will be functions, watch p43
 };
 
 bool Lex::BufPut(char c)

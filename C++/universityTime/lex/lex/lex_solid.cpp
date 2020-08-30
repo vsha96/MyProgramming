@@ -2,42 +2,88 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "lex.hpp"
 
-const char *KEY_WORD[] = {
+#ifndef LEX_STR_LIMIT
+#define LEX_STR_LIMIT 128
+#endif
+
+char KEY_WORD[][16] = {
 	"if",
 	"then",
 	"for",
 	"from",
 	"to",
 	"print",
-	//in-game functuions
-		//no parameters
-	"turn",
-	"my_id",
-	"turn",
-	"players",
-	"active_players",
-	"supply",
-	"raw_price",
-	"demand",
-	"production_price",
-		//one param - count
-	"prod",
-	"build",
-		//one param - player's number
-	"money",
-	"raw",
-	"production",
-	"factories",
-	"result_raw_price",
-	"result_prod_bought",
-	"result_prod_price",
-		//two param - count, price
 	"buy",
 	"sell",
-	//end of in-game functuions
-	NULL
+	"prod",
+	"build",
+	"turn",
+}; //keep in mind count if you change this
+
+enum Type {
+	t_kword,
+	t_word,
+	t_oper,
+	t_string,
+	t_number,
+	t_algebra,
+	t_sep
+};
+
+struct List {
+	const char *str;
+	Type type;
+	int line_num;
+	List *next;
+};
+
+class Lex {
+		enum State {
+			fsm_start,
+			fsm_word,
+			fsm_oper,
+			fsm_string,
+			fsm_number,
+			fsm_algebra,
+			fsm_sep
+		};
+		
+		char buf[LEX_STR_LIMIT];
+		int buf_used;
+
+		FILE *file;
+		State state;
+		int line_num;
+		List *list; //this must be returned by Analyze
+		List *end;
+		
+		bool BufPut(char c);
+		//если никуда не подошло - то не может быть такого символа
+		bool IsSeparator(char c);
+		bool Separator(char c);
+		void CheckKeyWord();
+		bool MachineWord(char c);
+		bool MachineOper(char c);
+		bool MachineString(char c);
+		bool MachineNumber(char c);
+		bool MachineAlgebra(char c);
+		bool MachineSep(char c);
+		void Add(const char *str, Type type);
+		bool Pop();
+		bool StepStart(char c);
+		bool StepWord(char c);
+		bool StepOper(char c);
+		bool StepString(char c);
+		bool StepNumber(char c);
+		//bool StepAlgebra(char c);
+		//bool StepSep(char c);
+		bool Step(char c);
+		void ShowState();
+	public:
+		Lex();
+		List *Analyze(char *file);
+		void ListPrint();
 };
 
 bool Lex::BufPut(char c)
@@ -74,11 +120,10 @@ void Lex::CheckKeyWord()
 {
 	if (!end)
 		return;
-	for (int i=0; KEY_WORD[i]; i++) {
+	for (int i=0; KEY_WORD[i] && i<11; i++)
 		if (!strcmp(KEY_WORD[i], end->str)) {
 			end->type = t_kword;
 		}
-	}
 }
 
 bool Lex::MachineWord(char c)
@@ -416,7 +461,7 @@ List *Lex::Analyze(char *f)
 		return NULL;
 	}
 	printf("====================================\n");
-	/*DEBUG*/ //ListPrint();
+	ListPrint();
 	fclose(file);
 	return list;
 }
@@ -457,3 +502,21 @@ void Lex::ListPrint()
 		}		
 	}
 }
+
+
+int main(int argc, char **argv) {
+	
+	Lex lex;
+	List *lex_list;
+	
+	if (argc != 2) {
+		printf("usage: ./lex [file_name]\n");
+		return 1;
+	}
+	
+	lex_list = lex.Analyze(argv[1]);
+}
+
+
+
+

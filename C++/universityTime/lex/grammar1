@@ -1,0 +1,47 @@
+
+===== GRAMMAR 1 =====
+
+S    -> INFUN S | DECL S | COND S | CYCLE S | EQUA S | eof
+
+INFUN-> ... //inline functions (p43)
+
+DECL ->	int <t_word> D' ; //push in var list
+D' -> [STAT] | eps
+
+COND -> if CRIT then { S }
+
+CRIT -> STAT OPER STAT
+
+CYCLE -> for <t_word> from STAT to STAT { S }
+
+STAT ->	<t_word> ALG | <t_number> ALG
+
+EQUA -> <t_word> = STAT;
+
+		//problem with unary operation -> sol: another statement
+OPER -> <t_oper>
+ALG  ->	<t_algebra> <t_word> ALG | <t_algebra> <t_number> ALG | eps
+
+
+
+t_oper: > >= < <= == != ! =
+
+t_algebra: + - * / %
+
+<!--
+COND ->	if STAT then { S } ##i mean cond goes only with OPER
+-->
+
+<!--
+STAT ->	<t_word> OPER | <t_word> ALG | 
+			<t_number> OPER | <t_number> ALG
+-->
+
+<!--
+OPER ->	<t_oper> <t_word> OPER | <t_oper> <t_number> OPER | eps
+-->
+
+
+
+
+

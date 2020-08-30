@@ -1,0 +1,6 @@
+
+
+array player [10];
+int money;
+print(money , player[1]);
+end
