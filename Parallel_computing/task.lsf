@@ -1,0 +1,5 @@
+#BSUB -n 2
+#BSUB -W 00:10
+#BSUB -o out.%J
+#BSUB -e err.%J
+OMP_NUM_THREADS=8 ./matrix_rank_omp
