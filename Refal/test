@@ -1,0 +1,219 @@
+DIALOG start
+ entry go
+ extrn print, card, numb, nrel, mul, div, add, sub, p1, m1, rp, dg, cp, br
+ extrn chartof, dgall, opnget, libget
+
+Lang S /begin/ /end/
+
+begin
+ =
+
+end
+ =
+
+*#go = <opnget <card 'Input the path with two formulas (one formula per string)\n'>> <libget><libget>
+go  = <print <f19 <card '\nВведите два числа '>>>
+
+* # ===================================
+
+f1 
+	e1 '||' e2 = 'I see || '
+	e1 = <f2 e1>
+
+f2
+	e1 = 'cant find pattern'
+
+* # ===================================
+
+f3
+	e1 = <f4 <chartof e1>>
+
+f4
+	s(f)1 e2 = 'I see it like one symbol [' s1 '] and other [' e2']'
+
+* # ===================================
+
+f5
+	'(' s1 ')' = <f6 (s1)>
+
+f6
+	(s1) = 'I see one symbol [' (s1) '] in struct'
+
+* # ===================================
+f7
+	e1 = <br 'a='e1> <br 'b='e1> <f8 <dgall>>
+f8
+	(e1)e2 = e1 <f8 e2>
+	e1 = e1
+
+* # ===================================
+f9
+	e(L)1 = 'String: ' e1
+	s(D)1 e(D)2 = <f10 <numb s1e2>>
+	
+
+f10
+	s(N)1 = 'I see the digit as symbol mark ' s(N)1
+
+* # ===================================
+f11
+	'begin' = <f12 /begin/>
+	'end' = <f12 /end/>
+	e1 = 'Type begin or end'
+
+f12
+	s(:Lang:)1 = 'I see it in alphabet :Lang: ' s1
+
+* # ===================================
+f13
+	'(' e1 ')(' e2 ')' = <transform_par '('e1')('e2')'>
+	e1 = 'Type smt in (e1)(e2)'
+
+*#transform_par
+*#	e1'('e2')'e3 = <transform_par e1(e2)e3>
+*#	e1 = <set_add e1>
+
+transform_par
+	e1 ')' e3 = <transform_par <transform_par2 e1 ')' > e3>
+	e1 = e1
+	*#e1 = <f14 e1>
+
+transform_par2
+	R e1 '(' e(('('))2 ')' = e1(e2)
+	e1 = 'error = unbalanced paranthesis'
+
+*#set_add
+*#	(e1'  'e2)(e3) = <set_add (e1' 'e2)(e3)>
+*#	(e3)(e1'  'e2) = <set_add (e3)(e1' 'e2)>
+*#	(' 'e1)(e2) = <set_add (e1)(e2)>
+*#	(e1)(' 'e2) = <set_add (e1)(e2)>
+*#	(e1' ')(e2) = <set_add (e1)(e2)>
+*#	(e1)(e2' ') = <set_add (e1)(e2)>
+*#	(e1 s((' '))2 e3 s2 e4)(e5) = <set_add (e1 s((' '))2 e3 e4)(e5)>
+*#	()(e1) = (e1)
+*#	(e1)() = (e1)
+*#	(e1 s((' '))2 e3)(s2 e4) = <set_add (e1 s2 e3)(e4)>
+*#	(e1)(s((' '))2 e3) = <set_add (e1 ' ' s2)(e3)>
+
+*# I need s(F)i !!! 
+*# (x (y) t y (y) (t))()
+*# (x v x)(x   y   r  (y))
+set_add
+	(' 'e1)(e2) = <set_add (e1)(e2)>
+	(e1)(' 'e2) = <set_add (e1)(e2)>
+	(e1' ')(e2) = <set_add (e1)(e2)>
+	(e1)(e2' ') = <set_add (e1)(e2)>
+	(e1'  'e2)(e3) = <set_add (e1' 'e2)(e3)>
+	(e3)(e1'  'e2) = <set_add (e3)(e1' 'e2)>
+
+	(e1 ( s2 ) e3 ( s2 ) e4) (e5) = <set_add (e1 ( s2 ) e3 e4)(e5)>
+	(e1 s((' '))2 e3 s2 e4) (e5) = <set_add (e1 s2 e3 e4)(e5)>
+
+	()(e1) = (e1)
+	(e1)() = (e1)
+
+	(e1 ( s2 ) e3) (e4 ( s2 ) e5) = <set_add (e1 ( s2 ) e3)(e4 e5)>
+	(e1 s((' '))2 e3) (s2 e4) = <set_add (e1 s2 e3)(e4)>
+	(e1) (e3 ( s2 ) e4) = <set_add (e1 ' ' ( s2 ))(e3 e4)>
+	(e1) (e3 s((' '))2 e4) = <set_add (e1 ' ' s2)(e3 e4)>
+
+set_check_null
+	(e1 (s2) e3 s2 e4) =
+	(e1 s2 e3 (s2) e4) =
+	e1 = e1
+
+
+
+f14
+	e1 = e1
+	
+* # ===================================
+f15
+	'()' = <f15 ('1')>
+
+f16
+	e1 s(('() '))2 e3 = s2
+
+* # ===================================
+f17
+	e1 = <set_add_to_all <transform_par e1>>
+
+set_add_to_all
+	((e1)e2) (e3) = <set_check_null <set_add (e1)(e3)>> <set_add_to_all (e2)(e3)>
+	()(e3) = 
+
+* # ===================================
+f18
+	*#e1 = <set_sub <transform_par e1>>
+	*#e1 = <set_xor <transform_par e1>>
+	e1 = <simplify_pol <transform_par e1>>
+
+set_sub
+	(' 'e1)(e2) = <set_sub (e1)(e2)>
+	(e1)(' 'e2) = <set_sub (e1)(e2)>
+	(e1' ')(e2) = <set_sub (e1)(e2)>
+	(e1)(e2' ') = <set_sub (e1)(e2)>
+	(e1'  'e2)(e3) = <set_sub (e1' 'e2)(e3)>
+	(e3)(e1'  'e2) = <set_sub (e3)(e1' 'e2)>
+	*# got it
+	(e1 s((' '))2 e3) (s2 e4) = <set_sub (e1 e3)(e4)>
+	(e1 ( s2 ) e3) (( s2 ) e4) = <set_sub (e1 e3)(e4)>
+	*#can't find
+	(e1)(s((' '))2 e4) = <set_sub (e1)(e4)>
+	(e1)(( s((' '))2 ) e4) = <set_sub (e1)(e4)>
+	*#result
+	()(e1) = ()
+	(e1)() = (e1)
+
+set_xor
+	(' 'e1)(e2) = <set_xor (e1)(e2)>
+	(e1)(' 'e2) = <set_xor (e1)(e2)>
+	(e1' ')(e2) = <set_xor (e1)(e2)>
+	(e1)(e2' ') = <set_xor (e1)(e2)>
+	(e1'  'e2)(e3) = <set_xor (e1' 'e2)(e3)>
+	(e3)(e1'  'e2) = <set_xor (e3)(e1' 'e2)>
+	*# found it
+	(e1 s((' '))2 e3) (e4 s2 e5) = <set_xor (e1 e3)(e4 e5)>
+	(e1 ( s2 ) e3) (e4 ( s2 ) e5) = <set_xor (e1 e3)(e4 e5)>
+	*#result
+	(e1)(e2) = <set_xor (e1' 'e2)>
+	(' 'e1) = <set_xor (e1)>
+	(e1' ') = <set_xor (e1)>
+	(e1) = (e1)
+
+simplify_pol
+	' 'e1 = <simplify_pol e1>
+	(e1)e2 = <simplify_pol2 <print (e1)' 'e2' '>>
+	e1 = 
+
+simplify_pol2
+	(e1)'  'e((' '))4 = (e1) <simplify_pol e4>
+	()' '()e((' '))3' 'e((' '))4 = <simplify_pol e4e3>
+	(e1)' '(e2)e((' '))3' 'e((' '))4 = <simplify_pol2 <simplify_pol3 (e1)(e2)<set_xor (e1)(e2)>' 'e3' 'e4>>
+	
+simplify_pol3
+	*# almost identical summands
+	*#(e1)(e2)( sx ' ' ( sx ) )' 'e3' 'e4 = <set_sub (e1)(sx (sx))>' 'e3' 'e4
+	*#(e1)(e2)( ( sx ) ' ' sx )' 'e3' 'e4 = <set_sub (e1)(sx (sx))>' 'e3' 'e4
+	*# identical summands
+	(e1)(e2)()' 'e((' '))3' 'e((' '))4 = ()' '()e3' 'e4
+	*# can't simplify
+	(e1)(e2)(eT)' 'e((' '))3' 'e((' '))4 = (e1)' 'e3' '(e2)e4
+
+
+*#((x)(1)(y)(y x)(z)(1)(y)(y z)(z)(1)(x)(x z)(y)(y z)(y x)(y x z))
+
+* # ===================================
+
+f19
+	e((' '))1 ' ' e((' '))2 = <max (<numb e1>)(<numb e2>)>
+
+max
+	*#(e1)() = e1
+	*#()(e2) = e2
+	(e1)(e2) = <max (e1)(e2)(<sub (e1)e2>)>
+	(e1)(e2)('-'e3) = e2
+	(e1)(e2)(e3) = e1
+
+
+ end

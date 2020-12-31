@@ -1,0 +1,8 @@
+DIALOG start
+ entry go
+ extrn print, card, numb, nrel, mul, div, add, sub, p1, m1, rp, dg, cp, br
+ 
+go = <print <card 'Введите сообщение '>>
+
+
+ end

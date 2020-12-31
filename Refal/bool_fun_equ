@@ -1,0 +1,332 @@
+ start
+ entry go
+ extrn print, card, numb, chartof
+ extrn br, dg, cp, rp, dgall
+ extrn opnget, libget
+
+go = <mode <card 'Choose mode: 1 - keyboard, 2 - file\n'>>
+*# go = <mode '1'>
+
+*# s1 s(:ArOper:)2 e3 = 'I see alg'
+
+*# ident = s(L)1 e(LD)2
+*# priority: ! * || -> =
+
+*# ?how I must define not, and, or? for better use
+*# there is an error:
+*# 	LogOper S /begin/ /end/
+LogOper S '!' '*' '||' '->' '='
+
+* ==============================================
+
+*# there we need sep input from kboard or from file
+mode
+	*#'1' = <print 'Available logic operations:\n! (not)\n* (and)\n|| (or)\n-> (implicatio)\n= (equal)\nConstants: 1 (true), 0 (false)\n'> <result <preparation1 <card 'Input formula\n'>>>
+	'1' = <print 'Available logic operations:\n! (not)\n* (and)\n|| (or)\n-> (implicatio)\n= (equal)\nConstants: 1 (true), 0 (false)\n'> <formula_equal1 <preparation1 <card 'Input the first formula\n'>> >
+	*# where I must close file? however it will be closed when program stops
+	'2' = <formula_equal12 <opnget <card 'Input the path to the file with two formulas (one formula per string)\n'>>>
+	e1 = <go>
+
+formula_equal1
+	*# we have for both formulas (eI)(eF)(eV)(eP)
+	(eI)(eF)(eV)(eP) = <result (eI)(eF)(eV)(eP)> <formula_equal2 (eP)<preparation1 <card 'Input the second formula\n'>>>
+
+formula_equal2
+	(eP)(e1)(e2)(e3)(e4) = <result (e1)(e2)(e3)(e4)> <formula_equal3 (eP)(e4)>
+
+formula_equal3
+	(eP)(e4) = <formula_equal4 <simplify_pol eP e4>>
+
+formula_equal12
+	 = <formula_equal22 <preparation1 <print <libget>>>>
+
+formula_equal22
+	(eI)(eF)(eV)(eP) = <result (eI)(eF)(eV)(eP)> <formula_equal32 (eP)<preparation1 <print<libget>>>>
+
+formula_equal32
+	(eP)(e1)(e2)(e3)(e4) = <result (e1)(e2)(e3)(e4)> <formula_equal42 (eP)(e4)>
+
+formula_equal42
+	(eP)(e4) = <formula_equal4 <simplify_pol eP e4>>
+
+formula_equal4
+	 = <print '\nEQUAL'>
+	e1 = <print '\nNOT EQUAL'>
+
+preparation1
+	 = 'empty string'
+	e1 = <preparation2 <erase_spaces e1>>
+
+erase_spaces
+	e1' 'e2 = e1 <erase_spaces e2>
+	e1 = e1
+
+preparation2
+	 = 'empty string'
+	e1 = <preparation3 <check_par e1>>
+
+check_par
+	e1 ')' e3 = <check_par <check_par2 e1 ')' > e3>
+	e1 '(' e3 = <br 'error = unbalanced paranthesis: ' e1 '_(_'e3>
+	e1 = e1
+	*# e1 '(' e3 = 'error: unbalanced paranthesis:' e1 '_(_'e3
+
+check_par2
+	R e1 '(' e(('('))2 ')' = e1(e2)
+	e1 ')' = <br 'error = unbalanced paranthesis: ' e1 '_)_'>
+
+preparation3
+	 = 'Error: func: preparation3'
+	*#e1 = <preparation4 <check_actions e1>>
+	*#e1 = <print 'Interpreted as: '<check_actions e1>>
+	e1 = <preparation4 <check_actions e1>>
+	*#e1 = <convert_actions <check_actions e1>>
+
+*# ?can it be more compact? convert actions to symbol marks?
+*# an orienteer is BNF
+check_actions
+	(e1) = (<check_actions e1>)
+	'!'e1 = '!'<check_actions e1>
+	e1 '*' e2 = <check_actions e1> '*' <check_actions e2> 
+	e1 '||' e2 = <check_actions e1> '||' <check_actions e2> 
+	e1 '->' e2 = <check_actions e1> '->' <check_actions e2> 
+	e1 '=' e2 = <check_actions e1> '=' <check_actions e2> 
+	s(L)1 e(LD)2 = <chartof s1e2>
+	s('01')1 = <numb s1>
+	 = <br 'error = missed operand or bad action' >
+	e1 s((LD'()!*||->='))2 e3 = <br 'error = illegal character [ ' s2 ' ]'>
+	e1 = <br 'error = wrong operand name or bad action _' e1 '_'>
+
+*# here we have formula with operands as s(F)x, actions in '' and struct par
+preparation4
+	 = 'Error: func: preparation4'
+	*# e1 = <convert_to_struct ()(<convert_actions e1>)>
+	*# e1 = <convert_actions e1>
+	*# '!'(e1) = <negative e1>
+	eI = (eI) <process1 <make_dnf <convert_actions eI>>>
+
+*# (x=y)*((x->y)=v||t) ok
+*# (x=y||t) ok
+convert_actions
+	((e1)) = <convert_actions (e1)>
+	(e1) = (<convert_actions e1>)
+	e1 '=' e2 = (<convert_actions e1>)'*'(<convert_actions e2>) '||' '!'(<convert_actions e1>)'*' '!'(<convert_actions e2>)
+	R e1 '->' e2 = '!'(<convert_actions e1>) '||' (<convert_actions e2>)
+	e1 '||' e2 = <convert_actions e1> '||' <convert_actions e2>
+	e1 '*' e2 = <convert_actions e1> '*' <convert_actions e2>
+	'!!'e1 = <convert_actions e1>
+	'!'e1 = '!'<convert_actions e1>
+	s(FN)1 = s1
+
+*# (x*y)*(t||z)*(q||e) ok
+*# (x||y)*(t*z)*(q||e) ok
+*# (x*(y||z))*(w||t*e) ok
+*# !(x||y)*w ok
+*# w*!(x||y||z) ok
+*# w*!(!x||!(y||z)) ok
+make_dnf
+	(e1) = <make_dnf e1>
+	e1 '||' e2 = <make_dnf e1> '||' <make_dnf e2>
+	e1 '!'(e2) e3 = <make_dnf e1 (<negative e2>) e3>
+	e1 '*' (e2) e3 = <make_dnf (<multiply (e1)(e2)>) e3>
+	e1 (e2) '*' e3 = <make_dnf e1 (<multiply (e3)(e2)>)>
+	e1 = e1
+
+multiply
+	(e1)(e2 '||' e3) = e1 '*' e2 '||' <multiply (e1)(e3)>
+	(e1)() = 'ERR ? func multiply'
+	(e1)(e2) = e1 '*' e2
+
+*# !(x*y||z) ok
+negative
+	e1 '||' e2 = (<negative e1>) '*' (<negative e2>)
+	e1 '*' e2 = (<negative e1>) '||' (<negative e2>)
+	'!'e1 = e1
+	e1 = '!'e1
+
+process1
+	 = 'Error: func: process1'
+	*# about convert_to_struct param-s
+	*# first for var-s
+	*# second for formula struct
+	*# third for formula input
+	eF = <process2 (eF)<convert_to_struct ()()(eF)>>
+
+*# here we have DNF
+convert_to_struct
+	*# s(FN)1 '||' s(FN)2 = (s1)(s2)
+	(eV)(eR)(e1 '||' e2) = <convert_to_struct <add_vars (eV)e1>(eR <summand()e1>)(e2)>
+	(eV)(eR)(e1) = <convert_to_struct <add_vars (eV)e1>(eR <summand()e1>)>
+	(eV)(eR) = (eV)(eR)
+	*# here i must transform formula with support functions 
+	*# x*(y||z) = x*y||x*z
+
+summand
+	(eR)s(FN)1'*'e2 = <summand <set_add (eR)(s1)> e2>
+	(eR)s(FN)1 = <summand <set_add (eR)(s1)>>
+	(eR)'!'s(FN)1'*'e2 = <summand <set_add (eR)( (s1) )> e2>
+	(eR)'!'s(FN)1 = <summand <set_add (eR)( (s1) )>>
+	(eR) = <set_check_null (eR)>
+
+add_vars
+	(eV)s(F)1'*'e2 = <add_vars <set_add (eV)(s1)> e2>
+	(eV)s(F)1 = <add_vars <set_add (eV)(s1)>>
+	(eV)'!'s(F)1'*'e2 = <add_vars <set_add (eV)(s1)> e2>
+	(eV)'!'s(F)1 = <add_vars <set_add (eV)(s1)>>
+	(eV)s(N)1'*'e2 = <add_vars (eV)e2>
+	(eV)s(N)1 = (eV)
+	(eV)'!'s(N)1'*'e2 = <add_vars (eV)e2>
+	(eV)'!'s(N)1 = (eV)
+	(eV) = (eV)
+
+set_add
+	(' 'e1)(e2) = <set_add (e1)(e2)>
+	(e1)(' 'e2) = <set_add (e1)(e2)>
+	(e1' ')(e2) = <set_add (e1)(e2)>
+	(e1)(e2' ') = <set_add (e1)(e2)>
+	(e1'  'e2)(e3) = <set_add (e1' 'e2)(e3)>
+	(e3)(e1'  'e2) = <set_add (e3)(e1' 'e2)>
+	(e1 ( s(FN)2 ) e3 ( s2 ) e4) (e5) = <set_add (e1 ( s2 ) e3 e4)(e5)>
+	(e1 s(FN)2 e3 s2 e4) (e5) = <set_add (e1 s2 e3 e4)(e5)>
+	(e1 ( s(FN)2 ) e3) (e4 ( s2 ) e5) = <set_add (e1 ( s2 ) e3)(e4 e5)>
+	(e1 s(FN)2 e3) (s2 e4) = <set_add (e1 s2 e3)(e4)>
+	(e1) (e3 ( s(FN)2 ) e4) = <set_add (e1 ' ' ( s2 ))(e3 e4)>
+	(e1) (e3 s(FN)2 e4) = <set_add (e1 ' ' s2)(e3 e4)>
+	()(e1) = (e1)
+	(e1)() = (e1)
+
+set_check_null
+	(e1'  'e2) = <set_check_null (e1' 'e2)>
+	(' 'e2) = <set_check_null (e2)>
+	(e1' ') = <set_check_null (e1)>
+	(e1 (s2) e3 s2 e4) =
+	(e1 s2 e3 (s2) e4) =
+	(e1 /0/ e2) =
+	(/1/) = (/1/)
+	(e1 /1/ e2) = <set_check_null (e1 e2)>
+	(e1 (/1/) e2) = <set_check_null (e1 /0/ e2)>
+	e1 = e1
+
+*# here we have struct of DNF
+*# we want a polynom
+process2
+	*# (eF)(eV)(eR) = '\nDNF:\t' eF '\nVar-s:\t' (eV) '\nStruct:\t' (eR)
+	*# (eF)(eV)(eR) = (eF) <process3 (eV) <convert_to_pol (eR)>>
+	(eF)(eV)(eR) = (eF) <process3 (eV) <convert_negatives <convert_to_pol (eR)>>>
+
+convert_to_pol
+	() = ((/0/))
+	((e1)) = ((e1))
+	((e1) e2) = <convert_to_pol2 ((e1))' 'e2>
+
+convert_to_pol2 *# there (e1) = ((x)(y)(z)...)
+	(e1)' '(e2)e3  = <convert_to_pol2 (e1 (e2)<set_add_to_all (e1)(e2)>)' 'e3>
+	(e1)' ' = (e1)
+
+set_add_to_all
+	((e1)e2) (e3) = <set_check_null <set_add (e1)(e3)>> <set_add_to_all (e2)(e3)>
+	()(e3) = 
+
+*#added 18.11
+convert_negatives
+	(e1 ( (sX) ) e4) = <convert_negatives (e1 (sX) (/1/) e4)>
+	(e1(e2 (sX) e3)e4) = <convert_negatives (e1 <clean_waste_spaces(e2 e3)> (e2 sX e3) e4)>
+	e1 = e1
+
+clean_waste_spaces
+	(e1'  'e2) = <clean_waste_spaces (e1' 'e2)>
+	(' 'e1e2) = <clean_waste_spaces (e1e2)>
+	(e1e2' ') = <clean_waste_spaces (e1e2)>
+	e1 = e1
+*#end of added 18.11
+
+*# here we have polynom struct
+process3
+	*#(eV)(eP) = (eV)(eP)
+	(eV)(eP) = <process4 (eV)(<simplify_pol eP>)>
+
+process4
+	(eV)(eP) = <check_fictitious_var (eV)(eP)>(eP)
+
+*# here we have summands of pol
+*# upd 18.11: now we have polynom without neg summands
+*# as (x y)(w t)
+*# !(x->y)*z=y ok
+*# x||y||w*0 ok
+*# !(x->y)*z=y->z ok
+simplify_pol
+	' 'e1 = <simplify_pol e1>
+	(e1)e2 = <simplify_pol2 (e1)' 'e2' '>
+	e1 =
+
+simplify_pol2
+	(e1)'  'e((' '))4 = (e1) <simplify_pol e4>
+	()' '()e((' '))3' 'e((' '))4 = <simplify_pol e4e3>
+	(e1)' '(e2)e((' '))3' 'e((' '))4 = <simplify_pol2 <simplify_pol3 (e1)(e2)<set_xor (e1)(e2)>' 'e3' 'e4>>
+	
+simplify_pol3
+	*# almost identical summands
+	*#(e1)(e2)( s(F)x ' '( sx ) )' 'e3' 'e4 = <set_sub (e1)(sx (sx))>' 'e3' 'e4
+	*#(e1)(e2)( ( s(F)x ) ' ' sx )' 'e3' 'e4 = <set_sub (e1)(sx (sx))>' 'e3' 'e4
+	*# identical summands
+	(e1)(e2)()' 'e((' '))3' 'e((' '))4 = ()' '()e3' 'e4
+	*# can't simplify
+	(e1)(e2)(eT)' 'e((' '))3' 'e((' '))4 = (e1)' 'e3' '(e2)e4
+
+set_xor
+	(' 'e1)(e2) = <set_xor (e1)(e2)>
+	(e1)(' 'e2) = <set_xor (e1)(e2)>
+	(e1' ')(e2) = <set_xor (e1)(e2)>
+	(e1)(e2' ') = <set_xor (e1)(e2)>
+	(e1'  'e2)(e3) = <set_xor (e1' 'e2)(e3)>
+	(e3)(e1'  'e2) = <set_xor (e3)(e1' 'e2)>
+	*# found it
+	(e1 s((' '))2 e3) (e4 s2 e5) = <set_xor (e1 e3)(e4 e5)>
+	(e1 ( s2 ) e3) (e4 ( s2 ) e5) = <set_xor (e1 e3)(e4 e5)>
+	*#result
+	(e1)(e2) = <set_xor (e1' 'e2)>
+	(' 'e1) = <set_xor (e1)>
+	(e1' ') = <set_xor (e1)>
+	(e1) = (e1)
+
+set_sub
+	(' 'e1)(e2) = <set_sub (e1)(e2)>
+	(e1)(' 'e2) = <set_sub (e1)(e2)>
+	(e1' ')(e2) = <set_sub (e1)(e2)>
+	(e1)(e2' ') = <set_sub (e1)(e2)>
+	(e1'  'e2)(e3) = <set_sub (e1' 'e2)(e3)>
+	(e3)(e1'  'e2) = <set_sub (e3)(e1' 'e2)>
+	*# got it
+	(e1 s((' '))2 e3) (s2 e4) = <set_sub (e1 e3)(e4)>
+	(e1 ( s2 ) e3) (( s2 ) e4) = <set_sub (e1 e3)(e4)>
+	*#can't find
+	(e1)(s((' '))2 e4) = <set_sub (e1)(e4)>
+	(e1)(( s((' '))2 ) e4) = <set_sub (e1)(e4)>
+	*#result
+	()(e1) = ()
+	(e1)() = (e1)
+
+*# (z)(1)
+check_fictitious_var
+	(eV)((e1)eP) = <check_fictitious_var <set_sub (eV)(e1)>(eP)>
+	(eV)() = (eV)
+
+
+*# I'm using <br ...> for errors and then dgall (this func)
+error_out
+	 = <error_out2 <dgall>>
+*# for output without paranthesis
+error_out2
+	(e1) e2 = e1'\n' <error_out2 e2>
+	e1 = e1
+
+result
+	e1 = <result_out (<error_out>)(e1)>
+	*# e1 = <print <error_out>> <print 'Result: ' e1>
+result_out
+	(s1e3)(e2) = <print s1e3 e2>
+	()((eI)(eF)(eV)(eP)) = <print 'Result:' '\nInterpreted as:\t' eI '\nDNF:\t\t' eF '\nFict var-s:\t' eV '\nPolynom:\t' eP '\n'>
+	()(e2) = <print 'Result: ' e2>
+	
+
+ end

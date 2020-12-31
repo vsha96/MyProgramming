@@ -1,0 +1,35 @@
+ start
+ entry go
+ extrn print, card, numb, nrel, mul, div, add, sub, p1, m1, rp, dg, cp, br
+ extrn chartof, dgall, opnget, libget
+
+go  = <print <process <f1<card '\nВведите структуру\n'>> >>
+
+*# a b (a (a b) (c ((c)) c) a) c a ((b))  =>  (а 5) (b 3) (c 4)
+
+process
+	e1 (e2) e3 = <process e1 e2 e3> *# убираем структурные скобки после f1, то есть на вход у нас была скобочная структура
+	e1 = <process2 <print e1>>
+
+process2
+	es s((' '))1 e2= <count (s1 /1/) e2> <process2 <del_sym (s1) e2>>
+	es = 
+
+del_sym
+	(s1) e2 s1 e3 = <del_sym (s1) e2 e3>
+	(s1) e2 = e2
+
+count
+	(s1 sc) es s1 e2 = <count (s1 <p1 sc>) e2>
+	(s1 sc) e2 = (s1 sc)
+
+f1
+	e1 ')' e2 = <f1 <f2 e1> e2>
+	e1 '(' e2 = 'ERR'
+	e1 = e1
+
+f2
+	R e1 '(' e2 = e1 (<f1 e2>)
+	e1 = 'ERR ' '('
+
+ end

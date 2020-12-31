@@ -1,0 +1,207 @@
+ start
+ entry go
+ extrn print, card, numb, chartof
+ extrn br, dg, cp, rp, dgall
+
+*# TODO
+*# go = <mode <card 'Choose mode: 1 - keyboard, 2 - file\n'>>
+go = <mode '1'>
+
+ArOper S '+-*/'
+*# s1 s(:ArOper:)2 e3 = 'I see alg'
+
+*# ident = s(L)1 e(LD)2
+*# TODO? we're starting recog symbols by operation priority
+*# ?maybe use chartof for variables? 
+*# ?and use the same for operations -> then we can use BNF
+*# 	but what about priority?
+*# priority: ! * || -> =
+
+*# ?how I must define not, and, or? for better use
+*# there is an error:
+*# 	LogOper S /begin/ /end/
+LogOper S '!' '*' '||' '->' '='
+
+* ==============================================
+
+*# there we need sep input from kboard or from file
+mode
+	'1' = <print 'Available logic operations:\n! (not)\n* (and)\n|| (or)\n-> (implicatio)\n= (equal)\nConstants: 1 (true), 0 (false)\n'> <result <preparation1 <card 'Input formula\n'>>>
+	'2' = <result 'TODO'>
+	e1 = <go>
+
+preparation1
+	 = 'empty string'
+	e1 = <preparation2 <erase_spaces e1>>
+
+erase_spaces
+	e1' 'e2 = e1 <erase_spaces e2>
+	e1 = e1
+
+preparation2
+	 = 'empty string'
+	e1 = <preparation3 <check_par e1>>
+
+check_par
+	e1 ')' e3 = <check_par <check_par2 e1 ')' > e3>
+	e1 '(' e3 = <br 'error = unbalanced paranthesis: ' e1 '_(_'e3>
+	e1 = e1
+	*# e1 '(' e3 = 'error: unbalanced paranthesis:' e1 '_(_'e3
+
+check_par2
+	R e1 '(' e(('('))2 ')' = e1(e2)
+	e1 ')' = <br 'error = unbalanced paranthesis: ' e1 '_)_'>
+
+preparation3
+	 = 'Error: func: preparation3'
+	*#e1 = <preparation4 <check_actions e1>>
+	*#e1 = <print 'Interpreted as: '<check_actions e1>>
+	e1 = <preparation4 <check_actions e1>>
+	*#e1 = <convert_actions <check_actions e1>>
+
+*# TODO ?can it be more compact? convert actions to symbol marks?
+*# ERR z||t*(x=y)
+*# an orienteer is BNF
+check_actions
+	(e1) = (<check_actions e1>)
+	'!'e1 = '!'<check_actions e1>
+	e1 '*' e2 = <check_actions e1> '*' <check_actions e2> 
+	e1 '||' e2 = <check_actions e1> '||' <check_actions e2> 
+	e1 '->' e2 = <check_actions e1> '->' <check_actions e2> 
+	e1 '=' e2 = <check_actions e1> '=' <check_actions e2> 
+	s(L)1 e(LD)2 = <chartof s1e2>
+	s('01')1 = <numb s1>
+	 = <br 'error = missed operand or bad action' >
+	e1 s((LD'()!*||->='))2 e3 = <br 'error = illegal character _' s2 '_'>
+	e1 = <br 'error = wrong operand name or bad action _' e1 '_'>
+
+*# here we have formula with operands as s(F)x, actions in '' and struct par
+preparation4
+	 = 'Error: func: preparation4'
+	*# e1 = <convert_to_struct ()(<convert_actions e1>)>
+	*#e1 = <convert_actions e1>
+	*#'!'(e1) = <negative e1>
+	e1 = <make_dnf <convert_actions e1>>
+
+*# (x=y)*((x->y)=v||t)
+*# (x=y||t) it seems to be ok
+convert_actions
+	((e1)) = <convert_actions (e1)>
+	(e1) = (<convert_actions e1>)
+	e1 '=' e2 = (<convert_actions e1>)'*'(<convert_actions e2>) '||' '!'(<convert_actions e1>)'*' '!'(<convert_actions e2>)
+	e1 '->' e2 = '!'(<convert_actions e1>) '||' (<convert_actions e2>)
+	e1 '||' e2 = <convert_actions e1> '||' <convert_actions e2>
+	e1 '*' e2 = <convert_actions e1> '*' <convert_actions e2>
+	'!!'e1 = <convert_actions e1>
+	'!'e1 = '!'<convert_actions e1>
+	s(FN)1 = s1
+
+*# TODO
+*# (x*y)*(t||z)*(q||e) ok
+*# (x||y)*(t*z)*(q||e) ok
+*# (x*(y||z))*(w||t*e) ok
+*# !(x||y)*w ok
+*# w*!(x||y||z) ok
+*# w*!(!x||!(y||z)) ok
+make_dnf
+	(e1) = <make_dnf e1>
+	e1 '||' e2 = <make_dnf e1> '||' <make_dnf e2>
+	e1 '!'(e2) e3 = <make_dnf e1 (<negative e2>) e3>
+	e1 '*' (e2) e3 = <make_dnf (<multiply (e1)(e2)>) e3>
+	e1 (e2) '*' e3 = <make_dnf e1 (<multiply (e3)(e2)>)>
+	e1 = e1
+
+multiply
+	(e1)(e2 '||' e3) = e1 '*' e2 '||' <multiply (e1)(e3)>
+	(e1)() = 'ERR ? func multiply'
+	(e1)(e2) = e1 '*' e2
+
+*# !(x*y||z) ok
+negative
+	e1 '||' e2 = (<negative e1>) '*' (<negative e2>)
+	e1 '*' e2 = (<negative e1>) '||' (<negative e2>)
+	'!'e1 = e1
+	e1 = '!'e1
+
+*# TODO
+convert_to_struct
+	*# s(FN)1 '||' s(FN)2 = (s1)(s2)
+	(eR)(e1 '||' e2) = <convert_to_struct (eR (<convert_to_struct e1>))(e2)>
+	(eR)(e1) = (eR (<convert_to_struct e1>))
+	*# here i must transform formula with support functions 
+	*# x*(y||z) = x*y||x*z
+	s(FN)1 = s1
+
+
+
+set_add
+	(e1'  'e2)(e3) = <set_add (e1' 'e2)(e3)>
+	(e3)(e1'  'e2) = <set_add (e3)(e1' 'e2)>
+	(' 'e1)(e2) = <set_add (e1)(e2)>
+	(e1)(' 'e2) = <set_add (e1)(e2)>
+	(e1' ')(e2) = <set_add (e1)(e2)>
+	(e1)(e2' ') = <set_add (e1)(e2)>
+
+	(e1 ( s(FN)2 ) e3 ( s2 ) e4) (e5) = <set_add (e1 ( s2 ) e3 e4)(e5)>
+	(e1 s(FN)2 e3 s2 e4) (e5) = <set_add (e1 s2 e3 e4)(e5)>
+
+	()(e1) = (e1)
+	(e1)() = (e1)
+
+	(e1 ( s(FN)2 ) e3) (e4 ( s2 ) e5) = <set_add (e1 ( s2 ) e3)(e4 e5)>
+	(e1 s(FN)2 e3) (s2 e4) = <set_add (e1 s2 e3)(e4)>
+	(e1) (e3 ( s(FN)2 ) e4) = <set_add (e1 ' ' ( s2 ))(e3 e4)>
+	(e1) (e3 s(FN)2 e4) = <set_add (e1 ' ' s2)(e3 e4)>
+
+set_ckeck_null
+	(e1 (s2) e3 s2 e4) = ' it is null '
+	(e1 s2 e3 (s2) e4) = ' it is null '
+	e1 = e1 ' it is not null '
+
+
+
+
+
+
+*# functions
+*# maybe there I'll make fixes and reconstuct logic
+not
+	'!'s1 = /1/'+'s1
+	e1 = 'Error: func: and'
+
+and
+	s1'*'s2 = s1'*'s2
+	e1 = 'Error: func: and'
+
+or
+	s1'||'s2 = s1'+'s2'+'s1'*'s2
+	e1 = 'Error: func: or'
+
+*# first we need DNF
+implicatio
+	s1'->'s2 = /1/'+'s1'+'s2'+'s1'*'s2
+	e1 = 'Error: func: implicatio'
+
+equal
+	s1'='s2 = /1/'+'s1'+'s2
+*# end of functions
+
+
+*# I'm using <dg ...> for errors and then dgall (this func)
+error_out
+	 = <error_out2 <dgall>>
+*# for output without paranthesis
+error_out2
+	(e1) e2 = e1'\n' <error_out2 e2>
+	e1 = e1
+
+result
+	e1 = <result_out (<error_out>)(e1)>
+	*# e1 = <print <error_out>> <print 'Result: ' e1>
+
+result_out
+	(s1e3)(e2) = <print s1e3 e2>
+	()(e2) = <print 'Result: ' e2>
+	
+
+ end

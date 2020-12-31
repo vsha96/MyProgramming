@@ -1,0 +1,24 @@
+ start
+ entry go
+ extrn print, card, numb, nrel, mul, div, add, sub, p1, m1, rp, dg, cp, br
+ extrn chartof, dgall, opnget, libget
+
+go  = <print 'RESULT:' <erase_dspaces <f1 <card '\nВвод '>>>>
+
+f1
+	e1 ' ' e2 = <pol (e1)e1> ' ' <f1 e2>
+	e1 = <pol (e1)e1>
+
+pol
+	(ec) s1 = 
+	(ec) = 
+	(ec) s1 e2 s1 = <pol (ec) e2>
+	(ec) e1 = ec
+
+erase_dspaces
+	e1 '  ' e2 = <erase_dspaces e1 ' ' e2>
+	e1 ' ' = <erase_dspaces e1>
+	' ' e1 = <erase_dspaces e1>
+	e1 = e1
+
+ end
