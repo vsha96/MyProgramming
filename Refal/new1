@@ -1,0 +1,17 @@
+ start
+ entry go
+ extrn print, card, numb, nrel, mul, div, add, sub, p1, m1, rp, dg, cp, br
+ extrn chartof, dgall, opnget, libget
+
+go  = <print <f1 <card '\nТекст из слов и цифр '>>>
+
+f1
+	e1 = <f2 (/0/)e1>
+
+f2
+	(sc) s('AB')1 s(D'ABCDEF')2 e(D'ABCDEF')3 e4 = <f2 (<p1 sc>) e4>
+	(sc) e1 ' ' e4 = <f2 (sc) e4>
+	(sc) ' ' e4 = <f2 (sc) e4>
+	(sc) e4 = sc
+
+ end

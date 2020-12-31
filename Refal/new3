@@ -1,0 +1,29 @@
+ start
+ entry go
+ extrn print, card, numb, nrel, mul, div, add, sub, p1, m1, rp, dg, cp, br
+ extrn chartof, dgall, opnget, libget
+
+go  = <print <f1 <card '\nВведите текст со скобками\n'>>>
+
+f1
+	e1 ')' e2 = <f1 <f2 e1> e2>
+	e1 ']' e2 = <f1 <f3 e1> e2>
+	e1 '}' e2 = <f1 <f4 e1> e2>
+	e1 '(' e2 = 'ERR'
+	e1 '[' e2 = 'ERR'
+	e1 '{' e2 = 'ERR'
+	e1 = e1
+
+f2
+	R e1 '(' e2 = e1 (<f1 e2>)
+	e1 = 'ERR ' '('
+
+f3
+	R e1 '[' e2 = e1 (<f1 e2>)
+	e1 = 'ERR ' '['
+
+f4
+	R e1 '{' e2 = e1 (<f1 e2>)
+	e1 = 'ERR ' '{'
+
+ end
