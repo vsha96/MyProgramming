@@ -1,2 +1,2 @@
 # MyProgramming
-Most of my programming experience is gathered here.
+Part of my programming experience is gathered here.
