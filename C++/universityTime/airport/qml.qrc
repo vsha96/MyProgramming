@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>RunWay.qml</file>
+        <file>AirportRunWays.qml</file>
+        <file>ControlPanel.qml</file>
+        <file>SignalLines.qml</file>
+        <file>RequestsPanel.qml</file>
+        <file>RequestList.qml</file>
+    </qresource>
+</RCC>
