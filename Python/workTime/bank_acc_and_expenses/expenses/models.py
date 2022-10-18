@@ -40,6 +40,7 @@ class Ticket(models.Model):
 
     def clean(self):
         super().clean()
+        validate_money(int(self.money))
         if not self.account.can_spend_money(self.money):
             raise ValidationError(_('Not enough money on the account balance.'))
 
