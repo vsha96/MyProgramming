@@ -20,11 +20,26 @@ class BankAccount(models.Model):
     def can_spend_money(self, asked_money):
         return self.money > 0 and int(asked_money) <= self.money
 
-    def spend_money(self, asked_money):
+    def spend_money(self, ticket):
+        asked_money = int(ticket.money)
+        # if the ticket already exists
+        if self.ticket_set.filter(pk=ticket.pk):
+            outdated_ticket = self.ticket_set.get(pk=ticket.pk)
+            self.restore_money(outdated_ticket)
+
         if self.can_spend_money(asked_money):
             # avoid race condition via F()
-            self.money = F('money') - int(asked_money)
+            self.money = F('money') - asked_money
             self.save()
+            self.refresh_from_db()
+
+
+    def restore_money(self, ticket):
+        asked_money = int(ticket.money)
+        # avoid race condition via F()
+        self.money = F('money') + asked_money
+        self.save()
+        self.refresh_from_db()
 
 
 class Ticket(models.Model):
@@ -46,8 +61,12 @@ class Ticket(models.Model):
 
     def save(self, *args, **kwargs):
         self.clean()
-        self.account.spend_money(self.money)
+        self.account.spend_money(self)
         super(Ticket, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self.account.restore_money(self)
+        super(Ticket, self).delete(*args, **kwargs)
 
 
 
