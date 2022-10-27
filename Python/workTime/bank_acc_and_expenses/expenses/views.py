@@ -7,7 +7,7 @@ from django.views import generic
 from django.utils import timezone
 
 from .models import BankAccount, Ticket
-from .forms import TicketForm
+from .forms import TicketForm, AccountForm
 
 
 class IndexView(generic.ListView):
@@ -16,11 +16,12 @@ class IndexView(generic.ListView):
 
     def get_queryset(self):
         """Return all bank accounts ordered by creation date."""
-        return BankAccount.objects.order_by('creation_date')
+        return BankAccount.objects.order_by('-creation_date')
 
 # class AccountDetailView(generic.DetailView):
 #     model = BankAccount
 #     template_name = 'expenses/account_index.html'
+
 
 def account_detail(request, account_id):
     account = get_object_or_404(BankAccount, pk=account_id)
@@ -32,6 +33,7 @@ def account_detail(request, account_id):
         {'account': account
             ,'ticket_list': ticket_list})
 
+
 def add_ticket(request, account_id):
     account = get_object_or_404(BankAccount, pk=account_id)
     ticket_form = TicketForm()
@@ -40,6 +42,7 @@ def add_ticket(request, account_id):
         'expenses/add_ticket.html',
         {'account': account,
         'form': ticket_form})
+
 
 def create_ticket(request, account_id):
     account = get_object_or_404(BankAccount, pk=account_id)
@@ -52,8 +55,12 @@ def create_ticket(request, account_id):
         new_ticket.clean()
 
     except ValidationError as err:
+        prev_data = {'ticket_text': new_ticket.ticket_text}
+        ticket_form = TicketForm(initial=prev_data)
+
+        del(new_ticket)
+
         # Redisplay the ticket creation form.
-        ticket_form = TicketForm()
 
         return render(request, 'expenses/add_ticket.html', {
             'account': account,
@@ -69,4 +76,32 @@ def create_ticket(request, account_id):
 
     # return HttpResponse('Created a ticket!')
 
+
+def add_account(request):
+    account_form = AccountForm()
+    account_form.fields['money'].disabled = True
+    return render(
+        request, 
+        'expenses/add_account.html',
+        {'form': account_form})
+
+
+def create_account(request):
+    try:
+        new_account = BankAccount()
+        new_account.account_text = request.POST['account_text']
+        new_account.creation_date = timezone.now()
+        new_account.money = new_account.money # default value
+        new_account.clean()
+    except ValidationError as err:
+        del(new_account)
+        # Redisplay the account creation form.
+        account_form = TicketForm()
+        return render(request, 'expenses/add_account.html', {
+            'error_message': err.message,
+            'form': account_form
+        })
+    else:
+        new_account.save()
+        return HttpResponseRedirect(reverse('expenses:index'))
 

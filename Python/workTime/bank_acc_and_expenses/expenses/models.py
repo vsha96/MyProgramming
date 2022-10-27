@@ -9,7 +9,7 @@ from .validators import validate_money
 class BankAccount(models.Model):
     account_text = models.CharField(max_length=100)
     creation_date = models.DateTimeField('Date of creation')
-    money = models.IntegerField(default=100)
+    money = models.IntegerField(default=100, validators=[validate_money])
 
     def __str__(self):
         return f'''Bank account #{self.pk}
