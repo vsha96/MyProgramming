@@ -1,13 +1,15 @@
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
 from django.views import generic
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from .models import BankAccount, Ticket
-from .forms import TicketForm, AccountForm
+from .forms import TicketForm, AccountForm, SendMoneyForm
 
 
 class IndexView(generic.ListView):
@@ -96,7 +98,7 @@ def create_account(request):
     except ValidationError as err:
         del(new_account)
         # Redisplay the account creation form.
-        account_form = TicketForm()
+        account_form = AccountForm()
         return render(request, 'expenses/add_account.html', {
             'error_message': err.message,
             'form': account_form
@@ -104,4 +106,64 @@ def create_account(request):
     else:
         new_account.save()
         return HttpResponseRedirect(reverse('expenses:index'))
+
+
+def send_money(request, account_id):
+    sender_account = get_object_or_404(BankAccount, pk=account_id)
+
+    init_data = {'sender_account': sender_account}
+    send_money_form = SendMoneyForm(initial=init_data)
+
+    return render(
+        request, 
+        'expenses/send_money.html',
+        {'account': sender_account,
+        'form': send_money_form})
+
+
+@transaction.atomic
+def send_money_done(request, account_id):
+    sender_account = get_object_or_404(BankAccount, pk=account_id)
+    money = int(request.POST['money'])
+    recipient_account_pk = request.POST['recipient_account']
+    recipient_account = get_object_or_404(BankAccount, pk=recipient_account_pk)
+    try:
+        # transaction savepoint
+        tid = transaction.savepoint()
+
+        # do transaction operations
+        new_ticket = Ticket()
+        new_ticket.account = sender_account
+        new_ticket.ticket_text = 'sending money to acc #' + str(recipient_account_pk)
+        new_ticket.pub_date = timezone.now()
+        new_ticket.money = money
+        new_ticket.save()
+
+        if (sender_account.money < 0):
+            raise ValidationError(_('Not enough money!'))
+
+        recipient_account.money += money
+        recipient_account.save()
+
+    except ValidationError as err:
+        # rollback to the transaction savepoint
+        transaction.savepoint_rollback(tid)
+
+        # rerender form
+        init_data = {'sender_account': sender_account}
+        send_money_form = SendMoneyForm(initial=init_data)
+        return render(request, 'expenses/send_money.html', {
+            'account': sender_account,
+            'error_message': err.message,
+            'form': send_money_form
+        })
+    else:
+        return HttpResponseRedirect(reverse('expenses:index'))
+        # return HttpResponseRedirect(reverse('expenses:detail', args=(account_id,)))
+
+
+
+
+
+
 

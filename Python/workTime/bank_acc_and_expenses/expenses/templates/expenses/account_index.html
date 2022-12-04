@@ -6,6 +6,12 @@
 
 <a href="{% url 'expenses:index' %}">Back to all accounts</a>
 
+<div>
+    <a href="{% url 'expenses:send_money' account.id %}">
+            <input type="button" value="send money">
+    </a>
+</div>
+
 <h2>Expenses:
     <!-- go to the form to add new ticket -->
     <a href="{% url 'expenses:add_ticket' account.id %}">

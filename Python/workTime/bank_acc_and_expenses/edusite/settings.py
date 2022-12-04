@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-2r9e3y6pqzf*pzw&-d5*+14-h3%aulutho-ylitp$)bf#=*4$1"
+# hidden in the .env file
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "social_django",
+    # for Jupyter-notebook
+    # "django_extensions",
 ]
 
 MIDDLEWARE = [
@@ -49,6 +52,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
 ROOT_URLCONF = "edusite.urls"
@@ -64,6 +68,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -82,6 +88,36 @@ DATABASES = {
     }
 }
 
+AUTHENTICATION_BACKENDS = [
+    # 'social_core.backends.twitter.TwitterOAuth',
+    'social_core.backends.twitch.TwitchOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# SOCIAL_AUTH_URL_NAMESPACE = 'social'
+LOGIN_URL = 'http://localhost/expenses/'
+LOGOUT_URL = 'http://localhost/expenses/'
+# LOGIN_REDIRECT_URL = 'http://localhost'
+
+
+# hidden in the .env file
+# SOCIAL_AUTH_TWITCH_KEY
+# SOCIAL_AUTH_TWITCH_SECRET
+
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'social_core.pipeline.user.create_user',
+    'expenses.views_oauth.create_account_oauth',  # <--- custom function
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details'
+)
+
+SOCIAL_AUTH_PARTIAL_PIPELINE_TOKEN_NAME = 'AAAAAA'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

@@ -17,6 +17,11 @@ class BankAccount(models.Model):
             ({self.creation_date.strftime("%Y-%m-%d")}) 
             with ${str(self.money)}'''
 
+    def clean(self):
+        super().clean()
+        # if BankAccount.objects.filter(account_text=self.account_text):
+            # raise ValidationError(_('This account already exists!'))
+
     def can_spend_money(self, asked_money):
         return self.money > 0 and int(asked_money) <= self.money
 

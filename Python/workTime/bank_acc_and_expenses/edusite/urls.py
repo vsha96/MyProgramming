@@ -16,7 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from expenses import views_oauth
+
 urlpatterns = [
     path('expenses/', include('expenses.urls')),
     path("admin/", admin.site.urls),
+    path('', include('social_django.urls', namespace='social')), 
+
+    # oath
+    path('accounts/profile/', views_oauth.create_account_oauth, name='create_account_oauth'),
 ]

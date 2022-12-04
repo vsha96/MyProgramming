@@ -28,12 +28,4 @@ class  TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
     permission_classes = [permissions.AllowAny]
 
-    # def get_queryset(self):
-    #     ticket_id = self.request.query_params.get("id", None)
-    #     if ticket_id:
-    #         ticket = get_object_or_404(Ticket, pk=ticket_id)
-    #         return ticket
-
-    #     return super().get_queryset()
-
 
