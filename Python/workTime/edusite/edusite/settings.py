@@ -48,7 +48,16 @@ INSTALLED_APPS = [
     "social_django",
     # for Jupyter-notebook
     "django_extensions",
+
+    # for slick reports
+    # DELETED
+    # "slick_reporting",
+    # "crispy_forms",
 ]
+
+# for slick reports
+# DELETED
+# CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -88,11 +97,21 @@ WSGI_APPLICATION = "edusite.wsgi.application"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'app_django_expenses',
+        'USER': 'vsha96',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
+
+# ===================
+# === SOCIAL AUTH ===
+# ===================
 
 AUTHENTICATION_BACKENDS = [
     # 'social_core.backends.twitter.TwitterOAuth',
@@ -100,12 +119,13 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
+
 # SOCIAL_AUTH_URL_NAMESPACE = 'social'
 LOGIN_URL = 'http://localhost/expenses/'
 LOGOUT_URL = 'http://localhost/expenses/'
-# LOGIN_REDIRECT_URL = 'http://localhost/expenses/'
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = 'http://localhost/complete/twitch/'
-
+# LOGIN_REDIRECT_URL = 'http://localhost'
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/complete/twitch/'
 
 
 # hidden in the .env file
@@ -125,7 +145,6 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.user.user_details'
 )
 
-SOCIAL_AUTH_PARTIAL_PIPELINE_TOKEN_NAME = 'AAAAAA'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
