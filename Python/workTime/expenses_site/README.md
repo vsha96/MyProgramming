@@ -1,4 +1,6 @@
 # Bank accounts and expenses
+
+TODO update notes (there were lots of things)  
 It is a simple django project that helps to keep expenses on bank accounts.
 
 ## How to run:
